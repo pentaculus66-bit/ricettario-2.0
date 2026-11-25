@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Ricettario 2.0" />
-  <link id="pwa-manifest-link" rel="manifest" />
+  <link id="pwa-manifest-link" rel="manifest" href="./manifest.json" />
   <link id="pwa-apple-icon" rel="apple-touch-icon" />
   <link id="pwa-favicon" rel="icon" type="image/svg+xml" />
   <title>Ricettario 2.0 — L'Archivio di Famiglia</title>
@@ -1125,6 +1125,7 @@
       renderHomeFeatured();
       navigateTo('home');
       syncGeminiApiKeyUI();
+      handleIncomingWebShareTarget();
 
       // Close theme popover on outside click
       document.addEventListener('click', (e) => {
@@ -3676,6 +3677,63 @@ Regole culinarie:
     };
 
     // ========================================================================
+    // WEB SHARE TARGET HANDLER (RECEIVE PDF / PHOTOS FROM ANDROID SHARE MENU)
+    // ========================================================================
+    async function handleIncomingWebShareTarget() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('shared') !== '1' || !('caches' in window)) return;
+
+        // Clean URL parameter immediately so reloads do not re-trigger
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+
+        const cache = await caches.open('ricettario-share-target-v1');
+        const metaResp = await cache.match('/__shared_meta__');
+        if (!metaResp) return;
+
+        const meta = await metaResp.json();
+        const sharedFiles = [];
+
+        for (const item of (meta.files || [])) {
+          const fResp = await cache.match(item.key);
+          if (fResp) {
+            const blob = await fResp.blob();
+            const fileObj = new File([blob], item.name || 'ricetta_condivisa', {
+              type: item.type || blob.type || 'application/octet-stream'
+            });
+            sharedFiles.push(fileObj);
+          }
+        }
+
+        await caches.delete('ricettario-share-target-v1');
+
+        if (sharedFiles.length > 0) {
+          openAddModal('pdf');
+          const pdfFile = sharedFiles.find(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+          if (pdfFile) {
+            await processPdfFile(pdfFile);
+            return;
+          }
+          const imageFiles = sharedFiles.filter(f => f.type.startsWith('image/'));
+          if (imageFiles.length > 0) {
+            await addImagesToImportQueue(imageFiles);
+            await analyzeImportedPhotosWithAI();
+            return;
+          }
+        }
+
+        const sharedText = [meta.title, meta.text, meta.url].filter(Boolean).join('\n').trim();
+        if (sharedText) {
+          openAddModal('pdf');
+          const ta = document.getElementById('pasted-recipe-text');
+          if (ta) ta.value = sharedText;
+          await handlePastedRecipeImport();
+        }
+      } catch (e) {}
+    }
+
+    // ========================================================================
     // PROGRESSIVE WEB APP (PWA) MANIFEST & SERVICE WORKER FOR CHROME / SAFARI
     // ========================================================================
     function initPwaSupport(bgHex = '#FFF8F6', primaryHex = '#9C4234') {
@@ -3693,7 +3751,7 @@ Regole culinarie:
         const faviconEl = document.getElementById('pwa-favicon');
         if (faviconEl) faviconEl.href = iconDataUrl;
 
-        // Render PNG icon via canvas for maximum Android Chrome & iOS Safari compatibility
+        // Render PNG icon for iOS Apple Touch Icon
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -3702,45 +3760,14 @@ Regole culinarie:
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, 512, 512);
           const pngIconUrl = canvas.toDataURL('image/png');
-
           const appleIcon = document.getElementById('pwa-apple-icon');
           if (appleIcon) appleIcon.href = pngIconUrl;
-
-          const startUrl = window.location.href.split('#')[0];
-          const scopeUrl = startUrl.substring(0, startUrl.lastIndexOf('/') + 1);
-          const manifestObj = {
-            name: 'Ricettario 2.0 — Archivio di Famiglia',
-            short_name: 'Ricettario 2.0',
-            description: 'Il ricettario di famiglia con wizard, importazione PDF con IA e backup.',
-            start_url: startUrl,
-            scope: scopeUrl,
-            display: 'standalone',
-            orientation: 'portrait-primary',
-            background_color: bgHex,
-            theme_color: bgHex,
-            icons: [
-              { src: pngIconUrl, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-              { src: pngIconUrl, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
-            ]
-          };
-
-          const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
-          const manifestUrl = URL.createObjectURL(manifestBlob);
-          const manifestLink = document.getElementById('pwa-manifest-link');
-          if (manifestLink) manifestLink.href = manifestUrl;
         };
         img.src = iconDataUrl;
 
-        // Lightweight Blob Service Worker (works on HTTPS like GitHub Pages)
-        if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
-          const swCode = `
-            self.addEventListener('install', (e) => self.skipWaiting());
-            self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
-            self.addEventListener('fetch', () => {});
-          `;
-          const swBlob = new Blob([swCode], { type: 'application/javascript' });
-          const swUrl = URL.createObjectURL(swBlob);
-          navigator.serviceWorker.register(swUrl).catch(() => {});
+        // Register real Service Worker (sw.js) for Android Share Target & PWA install
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+          navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
         }
       } catch (e) {}
     }
