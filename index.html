@@ -723,7 +723,7 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- MODAL 4: BACKUP / GOOGLE DRIVE & GEMINI PERSONAL API KEY               -->
+  <!-- MODAL 4: BACKUP / GOOGLE DRIVE & GEMINI / GROQ PERSONAL API KEYS       -->
   <!-- ====================================================================== -->
   <div id="modal-backup" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border shadow-2xl p-5 sm:p-6 space-y-5 animate-modal"
@@ -852,7 +852,7 @@
           <div class="space-y-1.5 pt-2 border-t" style="border-color: var(--md-sys-color-outline-variant);">
             <div class="flex items-center justify-between">
               <label class="text-[11px] font-extrabold" style="color: var(--md-sys-color-on-surface);">
-                2. Chiave API Groq — Llama 3.3 70B (riserva gratuita ultra-veloce)
+                2. Chiave API Groq (riserva gratuita ultra-veloce)
               </label>
               <a href="https://console.groq.com/keys" target="_blank" rel="noopener"
                  class="text-[11px] font-bold underline" style="color: var(--md-sys-color-primary);">
@@ -1408,6 +1408,57 @@
       resEl.className = 'text-[11px] font-semibold leading-snug text-red-600';
     }
 
+    async function fetchAvailableGroqTextModels(key, preferVision = false) {
+      const preferredOrder = preferVision
+        ? [
+            'meta-llama/llama-4-scout-17b-16e-instruct',
+            'meta-llama/llama-4-maverick-17b-128e-instruct',
+            'llama-3.2-90b-vision-preview',
+            'llama-3.2-11b-vision-preview',
+            'openai/gpt-oss-120b',
+            'openai/gpt-oss-20b',
+            'qwen/qwen3-32b',
+            'llama-3.1-8b-instant',
+            'llama3-70b-8192',
+            'llama3-8b-8192'
+          ]
+        : [
+            'openai/gpt-oss-120b',
+            'meta-llama/llama-4-maverick-17b-128e-instruct',
+            'meta-llama/llama-4-scout-17b-16e-instruct',
+            'qwen/qwen3-32b',
+            'openai/gpt-oss-20b',
+            'llama-3.1-8b-instant',
+            'llama-3.3-70b-versatile',
+            'llama3-70b-8192',
+            'llama3-8b-8192'
+          ];
+
+      try {
+        const listResp = await fetch('https://api.groq.com/openai/v1/models', {
+          headers: { 'Authorization': `Bearer ${key}` }
+        });
+        if (!listResp.ok) {
+          const errJson = await listResp.json().catch(() => ({}));
+          return { models: preferredOrder, authError: errJson?.error?.message || `HTTP ${listResp.status}` };
+        }
+        const listData = await listResp.json();
+        const activeIds = (listData?.data || [])
+          .map(m => m.id)
+          .filter(id => id && !/whisper|guard|tts|audio|safeguard|orpheus|playai/i.test(id));
+
+        if (activeIds.length === 0) return { models: preferredOrder, authError: '' };
+
+        const sorted = [
+          ...preferredOrder.filter(id => activeIds.includes(id)),
+          ...activeIds.filter(id => !preferredOrder.includes(id))
+        ];
+        return { models: sorted, authError: '' };
+      } catch (e) {
+        return { models: preferredOrder, authError: '' };
+      }
+    }
+
     async function testPersonalGroqKey() {
       const input = document.getElementById('groq-api-key-input');
       const key = (input?.value || getPersonalGroqKey() || '').replace(/\s+/g, '').trim();
@@ -1424,38 +1475,49 @@
       localStorage.setItem(GROQ_API_KEY_STORAGE, key);
       syncGeminiApiKeyUI();
 
-      resEl.textContent = 'Verifica connessione con Groq (Llama 3.3 70B) in corso...';
+      resEl.textContent = 'Verifica modelli attivi su Groq in corso...';
       resEl.className = 'text-[11px] font-semibold leading-snug opacity-80';
       resEl.classList.remove('hidden');
 
-      try {
-        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${key}`
-          },
-          body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
-            messages: [{ role: 'user', content: 'Rispondi solo OK' }],
-            max_tokens: 10
-          })
-        });
-
-        if (resp.ok) {
-          resEl.textContent = '✓ Chiave Groq funzionante! Collegata a Llama 3.3 70B.';
-          resEl.className = 'text-[11px] font-bold leading-snug text-green-700';
-          showToast('Chiave API Groq verificata con successo!', 'check_circle');
-        } else {
-          const errBody = await resp.json().catch(() => ({}));
-          const msg = errBody?.error?.message || `Errore HTTP ${resp.status}`;
-          resEl.textContent = `✗ ${msg}`;
-          resEl.className = 'text-[11px] font-semibold leading-snug text-red-600';
-        }
-      } catch (e) {
-        resEl.textContent = '✗ Impossibile contattare Groq (verifica connessione internet).';
+      const { models, authError } = await fetchAvailableGroqTextModels(key, false);
+      if (authError) {
+        resEl.textContent = `✗ ${authError}`;
         resEl.className = 'text-[11px] font-semibold leading-snug text-red-600';
+        return;
       }
+
+      let lastErr = 'Nessun modello attivo trovato sul tuo account Groq';
+      for (const model of models.slice(0, 5)) {
+        try {
+          const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${key}`
+            },
+            body: JSON.stringify({
+              model,
+              messages: [{ role: 'user', content: 'Rispondi solo OK' }],
+              max_tokens: 10
+            })
+          });
+
+          if (resp.ok) {
+            resEl.textContent = `✓ Chiave Groq funzionante! Collegata al modello ${model}.`;
+            resEl.className = 'text-[11px] font-bold leading-snug text-green-700';
+            showToast('Chiave API Groq verificata con successo!', 'check_circle');
+            return;
+          } else {
+            const errBody = await resp.json().catch(() => ({}));
+            lastErr = errBody?.error?.message || `Errore HTTP ${resp.status}`;
+          }
+        } catch (e) {
+          lastErr = 'Impossibile contattare Groq (verifica connessione internet).';
+        }
+      }
+
+      resEl.textContent = `✗ ${lastErr}`;
+      resEl.className = 'text-[11px] font-semibold leading-snug text-red-600';
     }
 
     // ========================================================================
@@ -3018,7 +3080,7 @@
         showToast('Incolla o trascina prima il testo della ricetta', 'info');
         return;
       }
-      addState.pdfStatus = 'Analisi intelligente del testo in corso con Gemini...';
+      addState.pdfStatus = 'Analisi intelligente del testo in corso con IA...';
       renderAddModal();
       await runRecipeExtractionPipeline(rawText, [], '');
     }
@@ -3061,7 +3123,7 @@
         // Send images ONLY if the PDF is scanned / has very little selectable text, keeping text-PDF requests ultra-fast and lightweight!
         const isScannedPdf = rawText.replace(/\s+/g, '').length < 60;
 
-        addState.pdfStatus = 'Analisi culinaria con Gemini in corso...';
+        addState.pdfStatus = 'Analisi culinaria con IA in corso...';
         renderAddModal();
 
         await runRecipeExtractionPipeline(
@@ -3125,8 +3187,11 @@
       if (parsed) {
         usedEngineName = 'Gemini';
       } else {
-        parsed = await parseRecipeWithGroq(rawText, pageImagesBase64);
-        if (parsed) usedEngineName = 'Groq Llama 3.3';
+        const groqRes = await parseRecipeWithGroq(rawText, pageImagesBase64);
+        if (groqRes && groqRes.data) {
+          parsed = groqRes.data;
+          usedEngineName = `Groq (${groqRes.model})`;
+        }
       }
       let usedAI = Boolean(parsed);
 
@@ -3259,12 +3324,14 @@ Regole culinarie:
 
       const systemPrompt = getCulinaryChefSystemPrompt();
       const hasImages = Array.isArray(pageImagesBase64) && pageImagesBase64.length > 0;
-      const models = hasImages
-        ? ['meta-llama/llama-4-scout-17b-16e-instruct', 'llama-3.3-70b-versatile']
-        : ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b'];
+      const { models, authError } = await fetchAvailableGroqTextModels(groqKey, hasImages);
+      if (authError) {
+        lastAiDiagnosticError = authError;
+        return null;
+      }
 
-      for (const model of models) {
-        const isVisionModel = model.includes('llama-4');
+      for (const model of models.slice(0, 6)) {
+        const isVisionModel = /llama-4|vision/i.test(model);
         const userContent = (isVisionModel && hasImages)
           ? [
               { type: 'text', text: `Analizza questa ricetta ed estrai il JSON strutturato:\n\n${rawText || '(Documento scansionato: leggi le immagini allegate)'}` },
@@ -3288,7 +3355,6 @@ Regole culinarie:
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userContent }
               ],
-              response_format: { type: 'json_object' },
               temperature: 0.2
             })
           });
@@ -3305,7 +3371,7 @@ Regole culinarie:
           if (!textOut) continue;
           const parsed = extractCleanJsonFromAIResponse(textOut);
           if (parsed && Array.isArray(parsed.ingredients)) {
-            return parsed;
+            return { data: parsed, model };
           }
         } catch (err) {
           lastAiDiagnosticError = 'Errore di rete verso Groq';
