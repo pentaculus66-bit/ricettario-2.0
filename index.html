@@ -968,7 +968,7 @@
     }
 
     // ========================================================================
-    // CORE CONSTANTS & STATE
+    // STORAGE KEYS, CONSTANTS, SAMPLE DATA & GLOBAL STATE
     // ========================================================================
     const STORAGE_KEY = 'ricettario_2_0_recipes_v1';
     const THEME_KEY = 'ricettario_2_0_theme_v1';
@@ -987,14 +987,107 @@
       { id: 'Lievitati', label: 'Lievitati', icon: 'bakery_dining' }
     ];
 
-    const OCCASIONS = ['In famiglia', 'Compleanno', 'Festività', 'Appuntamento'];
     const DIFFICULTIES = ['Basso', 'Medio', 'Elevato'];
-    const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    const OCCASIONS = ['In famiglia', 'Compleanno', 'Festività', 'Appuntamento'];
+    const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');
+
+    const SAMPLE_RECIPES = [
+      {
+        id: 'sample-1',
+        title: 'Tagliatelle al Ragù della Nonna',
+        description: 'Il classico ragù della domenica cotto lentamente a fuoco dolce con profumo di alloro e noce moscata.',
+        category: 'Primi',
+        totalTime: 180,
+        servings: 6,
+        difficulty: 'Medio',
+        occasions: ['In famiglia', 'Festività'],
+        origin: 'tramandata',
+        inheritedFrom: 'Nonna Maria',
+        notes: 'Non avere fretta nella rosolatura iniziale del soffritto e della carne: è il segreto della riuscita.',
+        image: '',
+        ingredients: [
+          '500 g di tagliatelle all’uovo',
+          '400 g di macinato di manzo',
+          '200 g di salsiccia fresca',
+          '700 ml di passata di pomodoro',
+          '1 carota media',
+          '1 costa di sedano',
+          '1 cipolla dorata',
+          '100 ml di vino rosso',
+          '3 cucchiai di olio extravergine d’oliva',
+          'Sale e pepe nero q.b.'
+        ],
+        steps: [
+          'Trita finemente sedano, carota e cipolla e falli appassire dolcemente in una casseruola dal fondo spesso con l’olio extravergine.',
+          'Aggiungi il macinato di manzo e la salsiccia sgranata, alzando la fiamma per far rosolare bene la carne.',
+          'Sfuma con il vino rosso e lascia evaporare completamente la parte alcolica.',
+          'Versa la passata di pomodoro, regola di sale e pepe, abbassa la fiamma al minimo e lascia sobbollire coperto per almeno 2 ore e mezza.',
+          'Cuoci le tagliatelle al dente, scolale e mantecale direttamente nel tegame con il ragù.'
+        ]
+      },
+      {
+        id: 'sample-2',
+        title: 'Tiramisù Classico al Mascarpone',
+        description: 'Crema vellutata al mascarpone, savoiardi inzuppati nel caffè della moka e cacao amaro.',
+        category: 'Dolci',
+        totalTime: 35,
+        servings: 6,
+        difficulty: 'Basso',
+        occasions: ['In famiglia', 'Compleanno', 'Appuntamento'],
+        origin: 'personale',
+        inheritedFrom: '',
+        notes: 'Lascialo riposare in frigorifero almeno 4 ore prima di servirlo.',
+        image: '',
+        ingredients: [
+          '500 g di mascarpone fresco',
+          '4 uova freschissime',
+          '100 g di zucchero semolato',
+          '300 g di savoiardi',
+          '300 ml di caffè della moka freddo',
+          'Cacao amaro in polvere q.b.'
+        ],
+        steps: [
+          'Separa i tuorli dagli albumi e monta i tuorli con metà dello zucchero fino a ottenere un composto chiaro e spumoso.',
+          'Incorpora il mascarpone poco alla volta lavorando delicatamente con una spatola.',
+          'Monta gli albumi a neve ben ferma aggiungendo lo zucchero rimanente e uniscili alla crema con movimenti dal basso verso l’alto.',
+          'Inzuppa rapidamente i savoiardi nel caffè freddo, disponili in una pirofila e alterna strati di savoiardi e crema.',
+          'Completa con una generosa spolverata di cacao amaro prima di servire.'
+        ]
+      },
+      {
+        id: 'sample-3',
+        title: 'Focaccia Alta Idratazione 80%',
+        description: 'Prova di lievitazione in teglia con crosta dorata e alveolatura soffice al rosmarino.',
+        category: 'Lievitati',
+        totalTime: 240,
+        servings: 4,
+        difficulty: 'Elevato',
+        occasions: ['In famiglia'],
+        origin: 'prova',
+        inheritedFrom: '',
+        notes: 'Usare acqua ben fredda di frigo per mantenere l’impasto incordato.',
+        image: '',
+        ingredients: [
+          '500 g di farina 0 forte (W300)',
+          '400 ml di acqua fredda',
+          '4 g di lievito di birra fresco',
+          '12 g di sale fino',
+          '35 ml di olio extravergine d’oliva',
+          'Rosmarino fresco e sale grosso q.b.'
+        ],
+        steps: [
+          'Sciogli il lievito in 350 ml di acqua e mescola grossolanamente con la farina; lascia riposare 30 minuti.',
+          'Aggiungi il sale e la restante acqua a filo impastando fino a incordatura, poi incorpora l’olio.',
+          'Esegui 3 giri di pieghe in ciotola ogni 30 minuti e lascia lievitare fino al raddoppio.',
+          'Stendi delicatamente in teglia ben oliata, crea le fossette con i polpastrelli, condisci con emulsione di acqua e olio, rosmarino e sale grosso e inforna a 240°C per 18-20 minuti.'
+        ]
+      }
+    ];
 
     let recipes = [];
     let currentOrigin = 'all';
     let currentCategory = 'all';
-    let lastAiDiagnosticError = '';
+    let currentDetailServings = 4;
     let wizardState = { step: 1, category: '', occasion: '', difficulty: '' };
     let addState = {
       mode: 'manual',
@@ -1017,248 +1110,29 @@
       pdfSourceLabel: '',
       rawPdfPreview: ''
     };
-
-    const SAMPLE_RECIPES = [
-      {
-        id: 'rec-1',
-        title: 'Lasagne della Domenica di Nonna Maria',
-        description: 'Sfoglia fresca all’uovo con ragù lento di manzo e maiale, besciamella vellutata e Parmigiano Reggiano 30 mesi.',
-        category: 'Primi',
-        totalTime: 180,
-        servings: 6,
-        difficulty: 'Medio',
-        occasions: ['In famiglia', 'Festività'],
-        origin: 'tramandata',
-        inheritedFrom: 'Nonna Maria',
-        notes: 'Il segreto è lasciar riposare la teglia 15 minuti fuori dal forno prima di tagliare le porzioni.',
-        image: '',
-        ingredients: [
-          '500 g di sfoglia fresca all’uovo per lasagne',
-          '600 g di macinato misto (manzo e maiale)',
-          '700 ml di passata di pomodoro rustica',
-          '1 carota, 1 costa di sedano, 1 cipolla dorata',
-          '100 ml di vino rosso fermo',
-          '1 litro di latte intero per la besciamella',
-          '80 g di burro e 80 g di farina 00',
-          '150 g di Parmigiano Reggiano grattugiato',
-          'Noce moscata, olio extravergine d’oliva, sale e pepe q.b.'
-        ],
-        steps: [
-          'Prepara un soffritto fine con sedano, carota e cipolla in olio extravergine d’oliva, poi rosola bene la carne trita.',
-          'Sfuma con il vino rosso, aggiungi la passata di pomodoro e lascia sobbollire coperto a fuoco dolce per almeno 2 ore.',
-          'Prepara la besciamella sciogliendo il burro, unendo la farina e versando il latte caldo a filo fino a ottenere una crema liscia.',
-          'Componi gli strati nella pirofila alternando besciamella, sfoglia, ragù e Parmigiano Reggiano.',
-          'Cuoci in forno statico preriscaldato a 180°C per 35 minuti fino a doratura croccante in superficie.'
-        ]
-      },
-      {
-        id: 'rec-2',
-        title: 'Tiramisù Classico al Mascarpone',
-        description: 'Il dolce preferito di casa: crema spumosa pastorizzata a freddo, savoiardi inzuppati nel caffè della moka e cacao amaro.',
-        category: 'Dolci',
-        totalTime: 40,
-        servings: 6,
-        difficulty: 'Basso',
-        occasions: ['Compleanno', 'In famiglia', 'Appuntamento'],
-        origin: 'personale',
-        inheritedFrom: '',
-        notes: 'Prepararlo la sera prima lo rende ancora più compatto e aromatico.',
-        image: '',
-        ingredients: [
-          '500 g di mascarpone fresco di alta qualità',
-          '4 uova freschissime a temperatura ambiente',
-          '120 g di zucchero semolato fine',
-          '300 g di savoiardi artigianali',
-          '350 ml di caffè espresso della moka non zuccherato, freddo',
-          'Cacao amaro in polvere q.b.'
-        ],
-        steps: [
-          'Separa i tuorli dagli albumi e monta i tuorli con metà dello zucchero fino a ottenere un composto chiaro e spumoso.',
-          'Incorpora delicatamente il mascarpone ai tuorli con una spatola dal basso verso l’alto.',
-          'Monta gli albumi a neve ben ferma aggiungendo gradualmente lo zucchero rimasto, poi uniscili alla crema senza smontarla.',
-          'Intingi velocemente i savoiardi nel caffè freddo e disponili sul fondo della pirofila, coprendo con metà della crema.',
-          'Ripeti con un secondo strato, livella la superficie, riponi in frigorifero per almeno 4 ore e spolvera con cacao amaro prima di servire.'
-        ]
-      },
-      {
-        id: 'rec-3',
-        title: 'Focaccia Alta Idratazione al Rosmarino',
-        description: 'Prova tecnica con farina tipo 1, 80% di idratazione e maturazione in frigo 24 ore per alveoli croccanti fuori e soffici dentro.',
-        category: 'Lievitati',
-        totalTime: 150,
-        servings: 8,
-        difficulty: 'Elevato',
-        occasions: ['In famiglia', 'Festività'],
-        origin: 'prova',
-        inheritedFrom: '',
-        notes: 'Versione v2: aumentato olio nell’emulsione finale, risultato eccellente.',
-        image: '',
-        ingredients: [
-          '500 g di farina tipo 1 forte (W300)',
-          '400 ml di acqua fredda',
-          '4 g di lievito di birra fresco',
-          '12 g di sale fino',
-          '40 ml di olio extravergine d’oliva + q.b. per la teglia',
-          'Rosmarino fresco e fiocchi di sale Maldon q.b.'
-        ],
-        steps: [
-          'Sciogli il lievito in 350 ml di acqua e mescola grossolanamente con tutta la farina. Lascia riposare coperto 30 minuti (autolisi).',
-          'Aggiungi il sale e l’acqua rimanente a filo impastando fino a incordatura, poi incorpora l’olio EVO.',
-          'Esegui 3 giri di pieghe in ciotola ogni 30 minuti, poi trasferisci in frigorifero per 18-24 ore.',
-          'Stendi delicatamente l’impasto nella teglia ben oliata, lascia lievitare 2 ore a temperatura ambiente e crea i classici buchi con i polpastrelli.',
-          'Irrora con emulsione di acqua e olio, aggiungi rosmarino e sale Maldon e cuoci a 240°C per 18-20 minuti.'
-        ]
-      },
-      {
-        id: 'rec-4',
-        title: 'Risotto allo Zafferano e Midollo',
-        description: 'Cremoso risotto alla milanese mantecato all’onda con pistilli di zafferano infusi e Parmigiano.',
-        category: 'Primi',
-        totalTime: 35,
-        servings: 4,
-        difficulty: 'Medio',
-        occasions: ['Appuntamento', 'Festività'],
-        origin: 'personale',
-        inheritedFrom: '',
-        notes: 'Mettere in infusione i pistilli di zafferano in mezzo bicchiere di brodo caldo 2 ore prima.',
-        image: '',
-        ingredients: [
-          '320 g di riso Carnaroli invecchiato',
-          '1 litro di brodo di carne caldo',
-          '0.5 g di pistilli di zafferano',
-          '1 scalogno piccolo',
-          '80 g di burro freddo a cubetti',
-          '70 g di Parmigiano Reggiano grattugiato',
-          '1/2 bicchiere di vino bianco secco'
-        ],
-        steps: [
-          'Appassisci lo scalogno tritato finemente con una noce di burro a fuoco dolce senza farlo bruciare.',
-          'Tosta il riso Carnaroli per 2 minuti finché i chicchi diventano traslucidi, quindi sfuma con il vino bianco.',
-          'Porta a cottura aggiungendo un mestolo di brodo bollente alla volta e mescolando regolarmente.',
-          'A 3 minuti dal termine versa l’infuso di zafferano; a fuoco spento manteca energicamente con burro freddo e Parmigiano.'
-        ]
-      },
-      {
-        id: 'rec-5',
-        title: 'Biscotti Frollini al Limone di Zia Clara',
-        description: 'Friabili biscotti da colazione e da tè profumati alla scorza di limone non trattato.',
-        category: 'Biscotti',
-        totalTime: 45,
-        servings: 25,
-        difficulty: 'Basso',
-        occasions: ['In famiglia', 'Compleanno'],
-        origin: 'tramandata',
-        inheritedFrom: 'Zia Clara',
-        notes: 'Non lavorare troppo la frolla per mantenerla friabile.',
-        image: '',
-        ingredients: [
-          '300 g di farina 00',
-          '150 g di burro freddo a pezzetti',
-          '110 g di zucchero a velo',
-          '2 tuorli d’uovo',
-          'Scorza grattugiata di 2 limoni biologici',
-          '1 pizzico di sale'
-        ],
-        steps: [
-          'Sabbiare la farina con il burro freddo e la scorza di limone fino a ottenere un composto bricioloso.',
-          'Unisci lo zucchero a velo, il pizzico di sale e i tuorli, compattando rapidamente il panetto.',
-          'Avvolgi nella pellicola e fai riposare in frigo 30 minuti, poi stendi a 5 mm e ritaglia i biscotti.',
-          'Cuoci a 175°C statico per 12-14 minuti finché i bordi risultano leggermente dorati.'
-        ]
-      },
-      {
-        id: 'rec-6',
-        title: 'Patate Croccanti al Forno alle Erbe',
-        description: 'Contorno dorato fuori e morbido dentro grazie alla precottura in acqua acidulata.',
-        category: 'Sides',
-        totalTime: 55,
-        servings: 4,
-        difficulty: 'Basso',
-        occasions: ['In famiglia', 'Festività'],
-        origin: 'personale',
-        inheritedFrom: '',
-        notes: 'Un cucchiaio di aceto nell’acqua di bollitura evita che le patate si sfaldino.',
-        image: '',
-        ingredients: [
-          '1 kg di patate a pasta gialla',
-          '4 cucchiai di olio extravergine d’oliva',
-          '2 spicchi d’aglio in camicia',
-          'Rosmarino, salvia e timo fresco',
-          'Sale grosso e pepe nero q.b.'
-        ],
-        steps: [
-          'Sbuccia le patate, tagliale a tocchetti regolari e sbollentale per 6 minuti in acqua salata con un cucchiaio di aceto.',
-          'Scolale bene e scuotile nello scolapasta per irruvidire leggermente la superficie esterna.',
-          'Condisci con olio EVO, aglio e trito d’erbe e cuoci in forno ventilato a 210°C per 35-40 minuti girandole a metà cottura.'
-        ]
-      },
-      {
-        id: 'rec-7',
-        title: 'Bruschette Stracciatella, Alici e Zeste di Limone',
-        description: 'Antipasto veloce e raffinato perfetto per aprire una cena speciale.',
-        category: 'Antipasti',
-        totalTime: 15,
-        servings: 4,
-        difficulty: 'Basso',
-        occasions: ['Appuntamento', 'In famiglia'],
-        origin: 'personale',
-        inheritedFrom: '',
-        notes: 'Usare pane casereccio a lievitazione naturale tagliato spesso.',
-        image: '',
-        ingredients: [
-          '4 fette spesse di pane casereccio',
-          '250 g di stracciatella pugliese fresca',
-          '8 filetti di alici del Cantabrico',
-          'Scorza di 1 limone non trattato',
-          'Olio extravergine d’oliva e pepe rosa q.b.'
-        ],
-        steps: [
-          'Tosta le fette di pane su una piastra ben calda con un filo d’olio EVO fino a renderle croccanti.',
-          'Distribuisci generosamente la stracciatella fresca sul pane ancora tiepido.',
-          'Adagia due filetti di alici su ogni bruschetta, completa con scorza di limone grattugiata e pepe rosa.'
-        ]
-      },
-      {
-        id: 'rec-8',
-        title: 'Filetto di Manzo in Crosta di Pepe Verde',
-        description: 'Secondo piatto elegante con salsa cremosa al brandy e pepe verde in salamoia.',
-        category: 'Secondi',
-        totalTime: 30,
-        servings: 2,
-        difficulty: 'Medio',
-        occasions: ['Appuntamento', 'Festività', 'Compleanno'],
-        origin: 'personale',
-        inheritedFrom: '',
-        notes: 'Lasciar riposare la carne 5 minuti avvolta in carta stagnola prima di servire.',
-        image: '',
-        ingredients: [
-          '2 medaglioni di filetto di manzo (circa 220 g l’uno)',
-          '2 cucchiai di pepe verde in salamoia',
-          '30 g di burro chiarificato',
-          '40 ml di brandy',
-          '120 ml di panna fresca liquida',
-          'Sale fino q.b.'
-        ],
-        steps: [
-          'Schiaccia grossolanamente metà dei grani di pepe verde e pressali sui due lati dei medaglioni di filetto.',
-          'Rosola i filetti nel burro spumeggiante 3 minuti per lato a fuoco vivace per sigillare i succhi.',
-          'Sfuma con il brandy, aggiungi la panna fresca e il pepe verde rimasto, lasciando restringere la salsa per 3 minuti.'
-        ]
-      }
-    ];
+    let lastAiDiagnosticError = '';
 
     // ========================================================================
-    // INITIALIZATION & STORAGE
+    // INITIALIZATION, STORAGE, NAVIGATION, FILTERING & THEME ENGINE
     // ========================================================================
     function initApp() {
-      loadRecipes();
       initThemeAndSkin();
-      syncGeminiApiKeyUI();
+      loadRecipes();
       renderCategoryChips();
-      buildAlphabetRail();
-      updateHomeCounts();
+      setupAlphabetRail();
+      updateOriginCounts();
       renderHomeFeatured();
       navigateTo('home');
+      syncGeminiApiKeyUI();
+
+      // Close theme popover on outside click
+      document.addEventListener('click', (e) => {
+        const pop = document.getElementById('theme-popover');
+        const btn = document.getElementById('theme-menu-btn');
+        if (pop && btn && !pop.contains(e.target) && !btn.contains(e.target)) {
+          pop.classList.add('hidden');
+        }
+      });
     }
 
     function loadRecipes() {
@@ -1279,595 +1153,118 @@
     function saveRecipes() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
-      } catch (e) {
-        showToast('Spazio di memoria locale quasi pieno', 'warning');
-      }
-      updateHomeCounts();
-    }
-
-    function getPersonalGeminiKey() {
-      try {
-        return (localStorage.getItem(GEMINI_API_KEY_STORAGE) || '').replace(/\s+/g, '').trim();
-      } catch (e) {
-        return '';
-      }
-    }
-
-    function getPersonalGroqKey() {
-      try {
-        return (localStorage.getItem(GROQ_API_KEY_STORAGE) || '').replace(/\s+/g, '').trim();
-      } catch (e) {
-        return '';
-      }
-    }
-
-    function hasAnyConfiguredAIKey() {
-      return Boolean(getPersonalGeminiKey() || getPersonalGroqKey());
-    }
-
-    function syncGeminiApiKeyUI() {
-      const savedGemini = getPersonalGeminiKey();
-      const savedGroq = getPersonalGroqKey();
-      const input = document.getElementById('gemini-api-key-input');
-      const groqInput = document.getElementById('groq-api-key-input');
-      const badge = document.getElementById('gemini-key-badge');
-      if (input) input.value = savedGemini;
-      if (groqInput) groqInput.value = savedGroq;
-      if (badge) {
-        const activeCount = (savedGemini ? 1 : 0) + (savedGroq ? 1 : 0);
-        badge.classList.toggle('hidden', activeCount === 0);
-        if (activeCount > 0) {
-          badge.textContent = activeCount === 2 ? 'Gemini + Groq Attivi' : (savedGemini ? 'Gemini Attivo' : 'Groq Attivo');
-        }
-      }
-    }
-
-    function savePersonalGeminiKey() {
-      const input = document.getElementById('gemini-api-key-input');
-      const val = (input?.value || '').replace(/\s+/g, '').trim();
-      const resEl = document.getElementById('gemini-key-test-result');
-      if (resEl) resEl.classList.add('hidden');
-      try {
-        if (val) {
-          localStorage.setItem(GEMINI_API_KEY_STORAGE, val);
-          showToast('Chiave API Gemini salvata sul dispositivo!', 'key');
-        } else {
-          localStorage.removeItem(GEMINI_API_KEY_STORAGE);
-          showToast('Chiave API Gemini rimossa', 'key_off');
-        }
       } catch (e) {}
-      syncGeminiApiKeyUI();
+      updateOriginCounts();
     }
 
-    function savePersonalGroqKey() {
-      const input = document.getElementById('groq-api-key-input');
-      const val = (input?.value || '').replace(/\s+/g, '').trim();
-      const resEl = document.getElementById('groq-key-test-result');
-      if (resEl) resEl.classList.add('hidden');
-      try {
-        if (val) {
-          localStorage.setItem(GROQ_API_KEY_STORAGE, val);
-          showToast('Chiave API Groq salvata sul dispositivo!', 'key');
-        } else {
-          localStorage.removeItem(GROQ_API_KEY_STORAGE);
-          showToast('Chiave API Groq rimossa', 'key_off');
-        }
-      } catch (e) {}
-      syncGeminiApiKeyUI();
+    function updateOriginCounts() {
+      const total = recipes.length;
+      const countEl = document.getElementById('nav-archive-count');
+      if (countEl) countEl.textContent = String(total);
+
+      const pCount = recipes.filter(r => r.origin === 'personale').length;
+      const tCount = recipes.filter(r => r.origin === 'tramandata').length;
+      const prCount = recipes.filter(r => r.origin === 'prova').length;
+
+      const elP = document.getElementById('count-personale');
+      const elT = document.getElementById('count-tramandata');
+      const elPr = document.getElementById('count-prova');
+      if (elP) elP.textContent = `${pCount} ${pCount === 1 ? 'ricetta' : 'ricette'}`;
+      if (elT) elT.textContent = `${tCount} ${tCount === 1 ? 'ricetta' : 'ricette'}`;
+      if (elPr) elPr.textContent = `${prCount} ${prCount === 1 ? 'ricetta' : 'ricette'}`;
     }
 
-    async function testPersonalGeminiKey() {
-      const input = document.getElementById('gemini-api-key-input');
-      const key = (input?.value || getPersonalGeminiKey() || '').replace(/\s+/g, '').trim();
-      const resEl = document.getElementById('gemini-key-test-result');
-      if (!resEl) return;
-
-      if (!key) {
-        resEl.textContent = 'Inserisci prima una chiave API Gemini (inizia con AIza...).';
-        resEl.className = 'text-[11px] font-semibold leading-snug text-amber-700';
-        resEl.classList.remove('hidden');
-        return;
-      }
-
-      localStorage.setItem(GEMINI_API_KEY_STORAGE, key);
-      syncGeminiApiKeyUI();
-
-      resEl.textContent = 'Verifica connessione con Google Gemini in corso...';
-      resEl.className = 'text-[11px] font-semibold leading-snug opacity-80';
-      resEl.classList.remove('hidden');
-
-      const testModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-3-flash-preview'];
-      let lastMsg = 'Errore sconosciuto';
-
-      for (const model of testModels) {
-        try {
-          const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ role: 'user', parts: [{ text: 'Rispondi solo OK' }] }],
-              generationConfig: { maxOutputTokens: 10 }
-            })
-          });
-
-          if (resp.ok) {
-            resEl.textContent = `✓ Chiave Gemini funzionante! Collegata al modello ${model}.`;
-            resEl.className = 'text-[11px] font-bold leading-snug text-green-700';
-            showToast('Chiave API Gemini verificata con successo!', 'check_circle');
-            return;
-          } else {
-            const errBody = await resp.json().catch(() => ({}));
-            lastMsg = errBody?.error?.message || `Errore HTTP ${resp.status}`;
-          }
-        } catch (e) {
-          lastMsg = 'Impossibile contattare Google (verifica connessione internet).';
-        }
-      }
-
-      resEl.textContent = `✗ ${lastMsg}`;
-      resEl.className = 'text-[11px] font-semibold leading-snug text-red-600';
-    }
-
-    async function fetchAvailableGroqTextModels(key, preferVision = false) {
-      const preferredOrder = preferVision
-        ? [
-            'meta-llama/llama-4-scout-17b-16e-instruct',
-            'meta-llama/llama-4-maverick-17b-128e-instruct',
-            'llama-3.2-90b-vision-preview',
-            'llama-3.2-11b-vision-preview',
-            'openai/gpt-oss-120b',
-            'openai/gpt-oss-20b',
-            'qwen/qwen3-32b',
-            'llama-3.1-8b-instant',
-            'llama3-70b-8192',
-            'llama3-8b-8192'
-          ]
-        : [
-            'openai/gpt-oss-120b',
-            'meta-llama/llama-4-maverick-17b-128e-instruct',
-            'meta-llama/llama-4-scout-17b-16e-instruct',
-            'qwen/qwen3-32b',
-            'openai/gpt-oss-20b',
-            'llama-3.1-8b-instant',
-            'llama-3.3-70b-versatile',
-            'llama3-70b-8192',
-            'llama3-8b-8192'
-          ];
-
-      try {
-        const listResp = await fetch('https://api.groq.com/openai/v1/models', {
-          headers: { 'Authorization': `Bearer ${key}` }
-        });
-        if (!listResp.ok) {
-          const errJson = await listResp.json().catch(() => ({}));
-          return { models: preferredOrder, authError: errJson?.error?.message || `HTTP ${listResp.status}` };
-        }
-        const listData = await listResp.json();
-        const activeIds = (listData?.data || [])
-          .map(m => m.id)
-          .filter(id => id && !/whisper|guard|tts|audio|safeguard|orpheus|playai/i.test(id));
-
-        if (activeIds.length === 0) return { models: preferredOrder, authError: '' };
-
-        const sorted = [
-          ...preferredOrder.filter(id => activeIds.includes(id)),
-          ...activeIds.filter(id => !preferredOrder.includes(id))
-        ];
-        return { models: sorted, authError: '' };
-      } catch (e) {
-        return { models: preferredOrder, authError: '' };
-      }
-    }
-
-    async function testPersonalGroqKey() {
-      const input = document.getElementById('groq-api-key-input');
-      const key = (input?.value || getPersonalGroqKey() || '').replace(/\s+/g, '').trim();
-      const resEl = document.getElementById('groq-key-test-result');
-      if (!resEl) return;
-
-      if (!key) {
-        resEl.textContent = 'Inserisci prima una chiave API Groq (inizia con gsk_...).';
-        resEl.className = 'text-[11px] font-semibold leading-snug text-amber-700';
-        resEl.classList.remove('hidden');
-        return;
-      }
-
-      localStorage.setItem(GROQ_API_KEY_STORAGE, key);
-      syncGeminiApiKeyUI();
-
-      resEl.textContent = 'Verifica modelli attivi su Groq in corso...';
-      resEl.className = 'text-[11px] font-semibold leading-snug opacity-80';
-      resEl.classList.remove('hidden');
-
-      const { models, authError } = await fetchAvailableGroqTextModels(key, false);
-      if (authError) {
-        resEl.textContent = `✗ ${authError}`;
-        resEl.className = 'text-[11px] font-semibold leading-snug text-red-600';
-        return;
-      }
-
-      let lastErr = 'Nessun modello attivo trovato sul tuo account Groq';
-      for (const model of models.slice(0, 5)) {
-        try {
-          const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${key}`
-            },
-            body: JSON.stringify({
-              model,
-              messages: [{ role: 'user', content: 'Rispondi solo OK' }],
-              max_tokens: 10
-            })
-          });
-
-          if (resp.ok) {
-            resEl.textContent = `✓ Chiave Groq funzionante! Collegata al modello ${model}.`;
-            resEl.className = 'text-[11px] font-bold leading-snug text-green-700';
-            showToast('Chiave API Groq verificata con successo!', 'check_circle');
-            return;
-          } else {
-            const errBody = await resp.json().catch(() => ({}));
-            lastErr = errBody?.error?.message || `Errore HTTP ${resp.status}`;
-          }
-        } catch (e) {
-          lastErr = 'Impossibile contattare Groq (verifica connessione internet).';
-        }
-      }
-
-      resEl.textContent = `✗ ${lastErr}`;
-      resEl.className = 'text-[11px] font-semibold leading-snug text-red-600';
-    }
-
-    // ========================================================================
-    // THEME & CUSTOM SKIN ENGINE
-    // ========================================================================
-    function initThemeAndSkin() {
-      const savedTheme = localStorage.getItem(THEME_KEY) || 'terracotta';
-      setTheme(savedTheme, false);
-
-      try {
-        const rawSkin = localStorage.getItem(CUSTOM_SKIN_KEY);
-        if (rawSkin) {
-          const parsedSkin = JSON.parse(rawSkin);
-          applySkinObject(parsedSkin, false);
-        }
-      } catch (e) {}
-    }
-
-    function setTheme(themeName, clearSkin = true) {
-      document.documentElement.setAttribute('data-theme', themeName);
-      localStorage.setItem(THEME_KEY, themeName);
-
-      document.querySelectorAll('.theme-option').forEach(btn => {
-        const isCurrent = btn.getAttribute('data-theme-opt') === themeName;
-        btn.style.backgroundColor = isCurrent ? 'var(--md-sys-color-secondary-container)' : 'transparent';
-        btn.style.color = isCurrent ? 'var(--md-sys-color-on-secondary-container)' : 'var(--md-sys-color-on-surface)';
-        const check = btn.querySelector('.check-icon');
-        if (check) check.classList.toggle('hidden', !isCurrent);
-      });
-
-      if (clearSkin) {
-        removeCustomSkin(true);
-        const pop = document.getElementById('theme-popover');
-        if (pop) pop.classList.add('hidden');
-      }
-    }
-
-    function toggleThemePopover() {
-      const pop = document.getElementById('theme-popover');
-      if (pop) pop.classList.toggle('hidden');
-    }
-
-    function openCustomSkinModal() {
-      const modal = document.getElementById('modal-skin');
-      if (modal) modal.classList.remove('hidden');
-    }
-
-    function handleSkinFileUpload(event) {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const ta = document.getElementById('skin-json-textarea');
-        if (ta) ta.value = e.target.result;
-        applyCustomSkinFromTextarea();
-      };
-      reader.readAsText(file);
-      event.target.value = '';
-    }
-
-    function applyCustomSkinFromTextarea() {
-      const raw = (document.getElementById('skin-json-textarea')?.value || '').trim();
-      if (!raw) {
-        showToast('Incolla prima il codice JSON della skin', 'info');
-        return;
-      }
-      try {
-        const cleaned = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
-        const skinObj = JSON.parse(cleaned);
-        applySkinObject(skinObj, true);
-        closeModal('modal-skin');
-      } catch (err) {
-        showToast('JSON della skin non valido: controlla le parentesi', 'error');
-      }
-    }
-
-    function applySkinObject(skin, persist = true) {
-      if (!skin || typeof skin !== 'object') return;
-      const root = document.documentElement;
-
-      if (skin.googleFontUrl) {
-        let linkEl = document.getElementById('custom-skin-font-link');
-        if (!linkEl) {
-          linkEl = document.createElement('link');
-          linkEl.id = 'custom-skin-font-link';
-          linkEl.rel = 'stylesheet';
-          document.head.appendChild(linkEl);
-        }
-        linkEl.href = skin.googleFontUrl;
-      }
-
-      if (skin.colors && typeof skin.colors === 'object') {
-        Object.entries(skin.colors).forEach(([cssVar, val]) => {
-          if (cssVar.startsWith('--')) root.style.setProperty(cssVar, val);
-        });
-      }
-
-      if (skin.styles && typeof skin.styles === 'object') {
-        Object.entries(skin.styles).forEach(([cssVar, val]) => {
-          if (cssVar.startsWith('--')) root.style.setProperty(cssVar, val);
-        });
-      }
-
-      const skinName = skin.name || 'Veste Personalizzata';
-      document.getElementById('custom-skin-active-dot')?.classList.remove('hidden');
-      const menuLabel = document.getElementById('custom-skin-menu-label');
-      if (menuLabel) menuLabel.textContent = skinName;
-      const banner = document.getElementById('active-skin-banner');
-      const nameEl = document.getElementById('active-skin-name');
-      if (banner && nameEl) {
-        nameEl.textContent = skinName;
-        banner.classList.remove('hidden');
-      }
-
-      if (persist) {
-        localStorage.setItem(CUSTOM_SKIN_KEY, JSON.stringify(skin));
-        showToast(`Veste "${skinName}" applicata!`, 'brush');
-      }
-    }
-
-    function removeCustomSkin(silent = false) {
-      const root = document.documentElement;
-      const varsToClear = [
-        '--app-font-family', '--app-heading-font', '--app-radius-card', '--app-radius-pill',
-        '--app-card-shadow', '--app-bg-pattern',
-        '--md-sys-color-primary', '--md-sys-color-on-primary', '--md-sys-color-primary-container', '--md-sys-color-on-primary-container',
-        '--md-sys-color-secondary', '--md-sys-color-on-secondary', '--md-sys-color-secondary-container', '--md-sys-color-on-secondary-container',
-        '--md-sys-color-tertiary', '--md-sys-color-on-tertiary', '--md-sys-color-tertiary-container', '--md-sys-color-on-tertiary-container',
-        '--md-sys-color-background', '--md-sys-color-on-background', '--md-sys-color-surface', '--md-sys-color-on-surface',
-        '--md-sys-color-on-surface-variant', '--md-sys-color-surface-container-lowest', '--md-sys-color-surface-container-low',
-        '--md-sys-color-surface-container', '--md-sys-color-surface-container-high', '--md-sys-color-surface-container-highest',
-        '--md-sys-color-outline', '--md-sys-color-outline-variant'
-      ];
-      varsToClear.forEach(v => root.style.removeProperty(v));
-      localStorage.removeItem(CUSTOM_SKIN_KEY);
-
-      document.getElementById('custom-skin-active-dot')?.classList.add('hidden');
-      const menuLabel = document.getElementById('custom-skin-menu-label');
-      if (menuLabel) menuLabel.textContent = 'Skin Personalizzata...';
-      document.getElementById('active-skin-banner')?.classList.add('hidden');
-
-      if (!silent) {
-        showToast('Ripristinato tema standard Material You', 'palette');
-      }
-    }
-
-    // ========================================================================
-    // NAVIGATION & HOME COUNTS
-    // ========================================================================
     function navigateTo(view) {
       const homeView = document.getElementById('view-home');
       const archiveView = document.getElementById('view-archive');
       const homeBtn = document.getElementById('nav-home-btn');
       const archiveBtn = document.getElementById('nav-archive-btn');
-
       if (!homeView || !archiveView) return;
 
       if (view === 'home') {
         homeView.classList.remove('hidden');
         archiveView.classList.add('hidden');
-        homeBtn.style.backgroundColor = 'var(--md-sys-color-primary)';
-        homeBtn.style.color = 'var(--md-sys-color-on-primary)';
-        archiveBtn.style.backgroundColor = 'transparent';
-        archiveBtn.style.color = 'var(--md-sys-color-on-surface-variant)';
-        updateHomeCounts();
+        if (homeBtn) {
+          homeBtn.style.backgroundColor = 'var(--md-sys-color-primary)';
+          homeBtn.style.color = 'var(--md-sys-color-on-primary)';
+        }
+        if (archiveBtn) {
+          archiveBtn.style.backgroundColor = 'transparent';
+          archiveBtn.style.color = 'var(--md-sys-color-on-surface-variant)';
+        }
         renderHomeFeatured();
       } else {
         homeView.classList.add('hidden');
         archiveView.classList.remove('hidden');
-        archiveBtn.style.backgroundColor = 'var(--md-sys-color-primary)';
-        archiveBtn.style.color = 'var(--md-sys-color-on-primary)';
-        homeBtn.style.backgroundColor = 'transparent';
-        homeBtn.style.color = 'var(--md-sys-color-on-surface-variant)';
+        if (archiveBtn) {
+          archiveBtn.style.backgroundColor = 'var(--md-sys-color-primary)';
+          archiveBtn.style.color = 'var(--md-sys-color-on-primary)';
+        }
+        if (homeBtn) {
+          homeBtn.style.backgroundColor = 'transparent';
+          homeBtn.style.color = 'var(--md-sys-color-on-surface-variant)';
+        }
         applyFilters();
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function openArchiveWithOrigin(origin) {
-      setOriginFilter(origin, false);
+      setOriginFilter(origin);
       navigateTo('archive');
     }
 
-    function updateHomeCounts() {
-      const total = recipes.length;
-      const personale = recipes.filter(r => r.origin === 'personale').length;
-      const tramandata = recipes.filter(r => r.origin === 'tramandata').length;
-      const prova = recipes.filter(r => r.origin === 'prova').length;
-
-      const navCount = document.getElementById('nav-archive-count');
-      if (navCount) navCount.textContent = total;
-      const cPers = document.getElementById('count-personale');
-      if (cPers) cPers.textContent = `${personale} ${personale === 1 ? 'ricetta' : 'ricette'}`;
-      const cTram = document.getElementById('count-tramandata');
-      if (cTram) cTram.textContent = `${tramandata} ${tramandata === 1 ? 'ricetta' : 'ricette'}`;
-      const cProv = document.getElementById('count-prova');
-      if (cProv) cProv.textContent = `${prova} ${prova === 1 ? 'ricetta' : 'ricette'}`;
+    function setOriginFilter(origin) {
+      currentOrigin = origin;
+      document.querySelectorAll('.origin-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.origin === origin);
+      });
+      applyFilters();
     }
 
-    function renderHomeFeatured() {
-      const grid = document.getElementById('home-featured-grid');
-      if (!grid) return;
-      const featured = recipes.slice(0, 6);
-      grid.innerHTML = featured.map(r => buildRecipeCardHTML(r)).join('');
-    }
-
-    // ========================================================================
-    // ARCHIVE FILTERING & RENDERING
-    // ========================================================================
     function renderCategoryChips() {
       const container = document.getElementById('category-chips');
       if (!container) return;
       container.innerHTML = CATEGORIES.map(cat => `
         <button type="button" onclick="setCategoryFilter('${cat.id}')" data-cat="${cat.id}"
-                class="cat-chip m3-chip ${currentCategory === cat.id ? 'active' : ''} px-3.5 py-2 text-xs font-semibold inline-flex items-center gap-1.5 shrink-0">
-          <span class="material-symbols-rounded text-[17px]">${cat.icon}</span>
-          ${cat.label}
+                class="cat-chip m3-chip ${currentCategory === cat.id ? 'active' : ''} px-3.5 py-1.5 text-xs font-semibold inline-flex items-center gap-1.5 shrink-0">
+          <span class="material-symbols-rounded text-[16px]">${cat.icon}</span>
+          <span>${cat.label}</span>
         </button>
       `).join('');
-    }
-
-    function setOriginFilter(origin, rerender = true) {
-      currentOrigin = origin;
-      document.querySelectorAll('.origin-tab').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-origin') === origin);
-      });
-      if (rerender) applyFilters();
     }
 
     function setCategoryFilter(catId) {
       currentCategory = catId;
       document.querySelectorAll('.cat-chip').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-cat') === catId);
+        btn.classList.toggle('active', btn.dataset.cat === catId);
       });
       applyFilters();
     }
 
     function clearSearch() {
-      const input = document.getElementById('search-input');
-      if (input) input.value = '';
+      const inp = document.getElementById('search-input');
+      if (inp) inp.value = '';
       applyFilters();
     }
 
     function resetAllFilters() {
       currentOrigin = 'all';
       currentCategory = 'all';
-      const searchEl = document.getElementById('search-input');
-      if (searchEl) searchEl.value = '';
-      const tEl = document.getElementById('filter-time');
-      if (tEl) tEl.value = 'all';
-      const dEl = document.getElementById('filter-difficulty');
-      if (dEl) dEl.value = 'all';
-      const oEl = document.getElementById('filter-occasion');
-      if (oEl) oEl.value = 'all';
+      const inp = document.getElementById('search-input');
+      if (inp) inp.value = '';
+      const fTime = document.getElementById('filter-time');
+      if (fTime) fTime.value = 'all';
+      const fDiff = document.getElementById('filter-difficulty');
+      if (fDiff) fDiff.value = 'all';
+      const fOcc = document.getElementById('filter-occasion');
+      if (fOcc) fOcc.value = 'all';
 
-      setOriginFilter('all', false);
+      document.querySelectorAll('.origin-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.origin === 'all');
+      });
       renderCategoryChips();
       applyFilters();
-    }
-
-    function applyFilters() {
-      const query = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
-      const timeVal = document.getElementById('filter-time')?.value || 'all';
-      const diffVal = document.getElementById('filter-difficulty')?.value || 'all';
-      const occVal = document.getElementById('filter-occasion')?.value || 'all';
-
-      const clearBtn = document.getElementById('clear-search-btn');
-      if (clearBtn) clearBtn.classList.toggle('hidden', query.length === 0);
-
-      const hasActiveFilters = currentOrigin !== 'all' || currentCategory !== 'all' || query !== '' || timeVal !== 'all' || diffVal !== 'all' || occVal !== 'all';
-      const resetBtn = document.getElementById('reset-filters-btn');
-      if (resetBtn) {
-        resetBtn.classList.toggle('hidden', !hasActiveFilters);
-        resetBtn.classList.toggle('inline-flex', hasActiveFilters);
-      }
-
-      const filtered = recipes.filter(r => {
-        if (currentOrigin !== 'all' && r.origin !== currentOrigin) return false;
-        if (currentCategory !== 'all' && r.category !== currentCategory) return false;
-        if (diffVal !== 'all' && r.difficulty !== diffVal) return false;
-        if (occVal !== 'all' && !(r.occasions || []).includes(occVal)) return false;
-
-        if (timeVal !== 'all') {
-          const t = Number(r.totalTime) || 0;
-          if (timeVal === '30' && t > 30) return false;
-          if (timeVal === '60' && t > 60) return false;
-          if (timeVal === '120' && t > 120) return false;
-          if (timeVal === '121' && t <= 120) return false;
-        }
-
-        if (query) {
-          const hay = [
-            r.title,
-            r.description,
-            r.category,
-            r.inheritedFrom,
-            ...(r.ingredients || [])
-          ].join(' ').toLowerCase();
-          if (!hay.includes(query)) return false;
-        }
-
-        return true;
-      }).sort((a, b) => a.title.localeCompare(b.title, 'it', { sensitivity: 'base' }));
-
-      const countLbl = document.getElementById('archive-results-label');
-      if (countLbl) countLbl.textContent = `${filtered.length} ${filtered.length === 1 ? 'ricetta' : 'ricette'}`;
-
-      renderGroupedArchive(filtered);
-    }
-
-    function renderGroupedArchive(list) {
-      const container = document.getElementById('archive-list-container');
-      const emptyState = document.getElementById('archive-empty-state');
-      if (!container || !emptyState) return;
-
-      if (list.length === 0) {
-        container.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        updateAlphabetAvailability(new Set());
-        return;
-      }
-
-      emptyState.classList.add('hidden');
-      const groups = {};
-      const availableLetters = new Set();
-
-      list.forEach(r => {
-        const firstChar = (r.title || '#').trim().charAt(0).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        const letter = /[A-Z]/.test(firstChar) ? firstChar : '#';
-        availableLetters.add(letter);
-        if (!groups[letter]) groups[letter] = [];
-        groups[letter].push(r);
-      });
-
-      updateAlphabetAvailability(availableLetters);
-
-      container.innerHTML = Object.keys(groups).sort().map(letter => `
-        <div id="letter-group-${letter}" class="space-y-3 scroll-mt-24">
-          <div class="flex items-center gap-3">
-            <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-extrabold"
-                  style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
-              ${letter}
-            </span>
-            <div class="h-px flex-1" style="background-color: var(--md-sys-color-outline-variant);"></div>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            ${groups[letter].map(r => buildRecipeCardHTML(r)).join('')}
-          </div>
-        </div>
-      `).join('');
     }
 
     function getOriginMeta(origin, inheritedFrom) {
@@ -1895,21 +1292,20 @@
       };
     }
 
-    function buildRecipeCardHTML(r) {
+    function renderRecipeCard(r) {
       const originMeta = getOriginMeta(r.origin, r.inheritedFrom);
-      const timeStr = formatDuration(r.totalTime);
       return `
-        <article onclick="openRecipeDetail('${r.id}')"
-                 class="skin-card border overflow-hidden cursor-pointer transition-all hover:-translate-y-0.5 flex flex-col justify-between group"
-                 style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+        <button type="button" onclick="openRecipeDetail('${r.id}')"
+                class="skin-card text-left border overflow-hidden transition-all hover:-translate-y-0.5 flex flex-col justify-between group"
+                style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
           <div>
             ${r.image ? `
-              <div class="h-36 w-full overflow-hidden border-b" style="border-color: var(--md-sys-color-outline-variant);">
-                <img src="${r.image}" alt="${escapeHtml(r.title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              <div class="h-36 w-full overflow-hidden">
+                <img src="${r.image}" alt="${escapeHtml(r.title)}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
               </div>
             ` : ''}
             <div class="p-4 space-y-2.5">
-              <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
                 <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1"
                       style="background-color: ${originMeta.bg}; color: ${originMeta.fg};">
                   <span class="material-symbols-rounded text-[13px]">${originMeta.icon}</span>
@@ -1921,9 +1317,7 @@
                 </span>
               </div>
 
-              <h4 class="font-extrabold text-base leading-snug group-hover:underline line-clamp-2">
-                ${escapeHtml(r.title)}
-              </h4>
+              <h4 class="font-extrabold text-base leading-snug group-hover:underline">${escapeHtml(r.title)}</h4>
 
               ${r.description ? `
                 <p class="text-xs line-clamp-2 leading-relaxed" style="color: var(--md-sys-color-on-surface-variant);">
@@ -1935,62 +1329,146 @@
 
           <div class="px-4 py-3 border-t flex items-center justify-between text-[11px] font-semibold"
                style="border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface-variant);">
-            <div class="flex items-center gap-3">
-              <span class="inline-flex items-center gap-1">
-                <span class="material-symbols-rounded text-[15px]">schedule</span>
-                ${timeStr}
-              </span>
-              <span class="inline-flex items-center gap-1">
-                <span class="material-symbols-rounded text-[15px]">signal_cellular_alt</span>
-                ${escapeHtml(r.difficulty)}
-              </span>
-            </div>
-            <button type="button" onclick="event.stopPropagation(); exportRecipeToPDF('${r.id}', false)"
-                    title="Esporta ricetta in PDF"
-                    class="w-7 h-7 rounded-full flex items-center justify-center hover:opacity-80"
-                    style="background-color: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-primary);">
-              <span class="material-symbols-rounded text-[16px]">picture_as_pdf</span>
-            </button>
+            <span class="inline-flex items-center gap-1">
+              <span class="material-symbols-rounded text-[15px]" style="color: var(--md-sys-color-primary);">schedule</span>
+              ${formatDuration(r.totalTime)}
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <span class="material-symbols-rounded text-[15px]" style="color: var(--md-sys-color-primary);">signal_cellular_alt</span>
+              ${escapeHtml(r.difficulty)}
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <span class="material-symbols-rounded text-[15px]" style="color: var(--md-sys-color-primary);">group</span>
+              ${Number(r.servings) || 4} pers.
+            </span>
           </div>
-        </article>
+        </button>
       `;
     }
 
-    // ========================================================================
-    // TOUCH-SCRUBBABLE A-Z ALPHABET RAIL
-    // ========================================================================
-    function buildAlphabetRail() {
+    function renderHomeFeatured() {
+      const grid = document.getElementById('home-featured-grid');
+      if (!grid) return;
+      const featured = recipes.slice(0, 6);
+      grid.innerHTML = featured.map(renderRecipeCard).join('');
+    }
+
+    function applyFilters() {
+      const listContainer = document.getElementById('archive-list-container');
+      const emptyState = document.getElementById('archive-empty-state');
+      const labelEl = document.getElementById('archive-results-label');
+      const resetBtn = document.getElementById('reset-filters-btn');
+      const searchInput = document.getElementById('search-input');
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (!listContainer || !emptyState) return;
+
+      const query = (searchInput?.value || '').trim().toLowerCase();
+      if (clearBtn) clearBtn.classList.toggle('hidden', query.length === 0);
+
+      const maxTime = document.getElementById('filter-time')?.value || 'all';
+      const diffFilter = document.getElementById('filter-difficulty')?.value || 'all';
+      const occFilter = document.getElementById('filter-occasion')?.value || 'all';
+
+      const isFiltered = currentOrigin !== 'all' || currentCategory !== 'all' || query !== '' ||
+                         maxTime !== 'all' || diffFilter !== 'all' || occFilter !== 'all';
+      if (resetBtn) {
+        resetBtn.classList.toggle('hidden', !isFiltered);
+        resetBtn.classList.toggle('inline-flex', isFiltered);
+      }
+
+      const filtered = recipes.filter(r => {
+        if (currentOrigin !== 'all' && r.origin !== currentOrigin) return false;
+        if (currentCategory !== 'all' && r.category !== currentCategory) return false;
+        if (diffFilter !== 'all' && r.difficulty !== diffFilter) return false;
+        if (occFilter !== 'all' && !(r.occasions || []).includes(occFilter)) return false;
+
+        if (maxTime !== 'all') {
+          const t = Number(r.totalTime) || 0;
+          if (maxTime === '121') {
+            if (t <= 120) return false;
+          } else if (t > Number(maxTime)) {
+            return false;
+          }
+        }
+
+        if (query) {
+          const hay = [
+            r.title,
+            r.description,
+            r.inheritedFrom,
+            r.category,
+            ...(r.ingredients || [])
+          ].join(' ').toLowerCase();
+          if (!hay.includes(query)) return false;
+        }
+
+        return true;
+      }).sort((a, b) => a.title.localeCompare(b.title, 'it', { sensitivity: 'base' }));
+
+      if (labelEl) {
+        labelEl.textContent = `${filtered.length} ${filtered.length === 1 ? 'ricetta' : 'ricette'}`;
+      }
+
+      if (filtered.length === 0) {
+        listContainer.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        updateAlphabetAvailability(new Set());
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      const groups = {};
+      const availableLetters = new Set();
+
+      filtered.forEach(r => {
+        const rawFirst = (r.title || '#').trim().charAt(0).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const letter = /[A-Z]/.test(rawFirst) ? rawFirst : '#';
+        availableLetters.add(letter);
+        if (!groups[letter]) groups[letter] = [];
+        groups[letter].push(r);
+      });
+
+      updateAlphabetAvailability(availableLetters);
+
+      listContainer.innerHTML = Object.keys(groups).sort().map(letter => `
+        <div id="letter-group-${letter}" class="space-y-3 scroll-mt-24">
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-extrabold"
+                  style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+              ${letter}
+            </span>
+            <div class="flex-1 h-px" style="background-color: var(--md-sys-color-outline-variant);"></div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${groups[letter].map(renderRecipeCard).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function setupAlphabetRail() {
       const rail = document.getElementById('alphabet-rail');
       if (!rail) return;
       rail.innerHTML = ALPHABET.map(letter => `
-        <button type="button" data-letter="${letter}"
-                class="alpha-btn w-5 h-4 sm:w-6 sm:h-5 text-[9px] sm:text-[10px] font-extrabold leading-none flex items-center justify-center rounded-full transition-transform">
+        <button type="button" data-letter="${letter}" onclick="scrollToLetter('${letter}')"
+                class="alpha-btn w-5 h-4 sm:w-6 sm:h-4.5 text-[10px] font-extrabold leading-none flex items-center justify-center rounded-full transition-colors">
           ${letter}
         </button>
       `).join('');
 
       const handleScrub = (clientY) => {
         const rect = rail.getBoundingClientRect();
-        const ratio = Math.max(0, Math.min(0.999, (clientY - rect.top) / rect.height));
-        const index = Math.floor(ratio * ALPHABET.length);
-        const letter = ALPHABET[index];
-        if (!letter) return;
-
-        const bubble = document.getElementById('alphabet-bubble');
-        if (bubble) {
-          bubble.textContent = letter;
-          bubble.classList.remove('hidden');
+        const relY = Math.max(0, Math.min(rect.height - 1, clientY - rect.top));
+        const idx = Math.floor((relY / rect.height) * ALPHABET.length);
+        const letter = ALPHABET[idx];
+        if (letter) {
+          const bubble = document.getElementById('alphabet-bubble');
+          if (bubble) {
+            bubble.textContent = letter;
+            bubble.classList.remove('hidden');
+          }
+          scrollToLetter(letter);
         }
-
-        const targetGroup = document.getElementById(`letter-group-${letter}`);
-        if (targetGroup) {
-          targetGroup.scrollIntoView({ behavior: 'auto', block: 'start' });
-        }
-      };
-
-      const endScrub = () => {
-        const bubble = document.getElementById('alphabet-bubble');
-        if (bubble) bubble.classList.add('hidden');
       };
 
       rail.addEventListener('touchstart', (e) => {
@@ -2001,35 +1479,360 @@
         if (e.touches[0]) handleScrub(e.touches[0].clientY);
       }, { passive: true });
 
-      rail.addEventListener('touchend', endScrub);
-      rail.addEventListener('touchcancel', endScrub);
-
-      rail.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-letter]');
-        if (!btn) return;
-        const letter = btn.getAttribute('data-letter');
-        const targetGroup = document.getElementById(`letter-group-${letter}`);
-        if (targetGroup) {
-          targetGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+      rail.addEventListener('touchend', () => {
+        const bubble = document.getElementById('alphabet-bubble');
+        if (bubble) bubble.classList.add('hidden');
       });
     }
 
     function updateAlphabetAvailability(availableSet) {
       document.querySelectorAll('.alpha-btn').forEach(btn => {
-        const letter = btn.getAttribute('data-letter');
-        const hasItems = availableSet.has(letter);
-        btn.style.opacity = hasItems ? '1' : '0.32';
-        btn.style.color = hasItems ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-on-surface-variant)';
+        const active = availableSet.has(btn.dataset.letter);
+        btn.style.color = active ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-outline)';
+        btn.style.opacity = active ? '1' : '0.45';
       });
     }
 
+    function scrollToLetter(letter) {
+      const target = document.getElementById(`letter-group-${letter}`);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
     // ========================================================================
-    // RECIPE DETAIL MODAL, GOOGLE KEEP EXPORT & PDF EXPORT
+    // MATERIAL YOU THEMES & CUSTOM JSON SKIN ENGINE
     // ========================================================================
-    function openRecipeDetail(id) {
+    function initThemeAndSkin() {
+      const savedTheme = localStorage.getItem(THEME_KEY) || 'terracotta';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeCheckmarks(savedTheme);
+
+      try {
+        const savedSkinRaw = localStorage.getItem(CUSTOM_SKIN_KEY);
+        if (savedSkinRaw) {
+          const skin = JSON.parse(savedSkinRaw);
+          applySkinObject(skin, false);
+        }
+      } catch (e) {}
+    }
+
+    function setTheme(themeName) {
+      removeCustomSkin(false);
+      document.documentElement.setAttribute('data-theme', themeName);
+      localStorage.setItem(THEME_KEY, themeName);
+      updateThemeCheckmarks(themeName);
+      toggleThemePopover();
+    }
+
+    function updateThemeCheckmarks(activeTheme) {
+      const hasSkin = Boolean(localStorage.getItem(CUSTOM_SKIN_KEY));
+      document.querySelectorAll('.theme-option').forEach(opt => {
+        const icon = opt.querySelector('.check-icon');
+        if (icon) {
+          icon.classList.toggle('hidden', hasSkin || opt.dataset.themeOpt !== activeTheme);
+        }
+      });
+    }
+
+    function toggleThemePopover() {
+      const pop = document.getElementById('theme-popover');
+      if (pop) pop.classList.toggle('hidden');
+    }
+
+    function openCustomSkinModal() {
+      const savedSkinRaw = localStorage.getItem(CUSTOM_SKIN_KEY);
+      const banner = document.getElementById('active-skin-banner');
+      const nameEl = document.getElementById('active-skin-name');
+      const ta = document.getElementById('skin-json-textarea');
+      if (savedSkinRaw) {
+        try {
+          const parsed = JSON.parse(savedSkinRaw);
+          if (banner) banner.classList.remove('hidden');
+          if (nameEl) nameEl.textContent = parsed.name || 'Personalizzata';
+          if (ta) ta.value = savedSkinRaw;
+        } catch (e) {}
+      } else {
+        if (banner) banner.classList.add('hidden');
+      }
+      document.getElementById('modal-skin').classList.remove('hidden');
+    }
+
+    function handleSkinFileUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const ta = document.getElementById('skin-json-textarea');
+        if (ta) ta.value = e.target.result;
+        applyCustomSkinFromTextarea();
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function applyCustomSkinFromTextarea() {
+      const raw = (document.getElementById('skin-json-textarea')?.value || '').trim();
+      if (!raw) {
+        showToast('Incolla prima il codice JSON della skin', 'info');
+        return;
+      }
+      try {
+        const skin = JSON.parse(raw);
+        if (!skin.colors || typeof skin.colors !== 'object') {
+          showToast('JSON skin non valido: manca "colors"', 'error');
+          return;
+        }
+        applySkinObject(skin, true);
+        closeModal('modal-skin');
+        showToast(`Veste "${skin.name || 'Personalizzata'}" applicata!`, 'brush');
+      } catch (err) {
+        showToast('Errore di sintassi nel JSON della skin', 'error');
+      }
+    }
+
+    function applySkinObject(skin, persist = true) {
+      const root = document.documentElement;
+      if (skin.googleFontUrl) {
+        let linkEl = document.getElementById('custom-skin-font');
+        if (!linkEl) {
+          linkEl = document.createElement('link');
+          linkEl.id = 'custom-skin-font';
+          linkEl.rel = 'stylesheet';
+          document.head.appendChild(linkEl);
+        }
+        linkEl.href = skin.googleFontUrl;
+      }
+
+      Object.entries(skin.colors || {}).forEach(([k, v]) => {
+        if (k.startsWith('--')) root.style.setProperty(k, v);
+      });
+      Object.entries(skin.styles || {}).forEach(([k, v]) => {
+        if (k.startsWith('--')) root.style.setProperty(k, v);
+      });
+
+      if (persist) {
+        localStorage.setItem(CUSTOM_SKIN_KEY, JSON.stringify(skin));
+      }
+
+      const dot = document.getElementById('custom-skin-active-dot');
+      if (dot) dot.classList.remove('hidden');
+      const menuLabel = document.getElementById('custom-skin-menu-label');
+      if (menuLabel) menuLabel.textContent = `Skin: ${skin.name || 'Attiva'}`;
+      updateThemeCheckmarks('');
+    }
+
+    function removeCustomSkin(notify = true) {
+      const root = document.documentElement;
+      const savedRaw = localStorage.getItem(CUSTOM_SKIN_KEY);
+      if (savedRaw) {
+        try {
+          const skin = JSON.parse(savedRaw);
+          Object.keys(skin.colors || {}).forEach(k => root.style.removeProperty(k));
+          Object.keys(skin.styles || {}).forEach(k => root.style.removeProperty(k));
+        } catch (e) {}
+      }
+      localStorage.removeItem(CUSTOM_SKIN_KEY);
+      const dot = document.getElementById('custom-skin-active-dot');
+      if (dot) dot.classList.add('hidden');
+      const menuLabel = document.getElementById('custom-skin-menu-label');
+      if (menuLabel) menuLabel.textContent = 'Skin Personalizzata...';
+      const banner = document.getElementById('active-skin-banner');
+      if (banner) banner.classList.add('hidden');
+      updateThemeCheckmarks(localStorage.getItem(THEME_KEY) || 'terracotta');
+      if (notify) showToast('Tema standard ripristinato', 'palette');
+    }
+
+    // ========================================================================
+    // GEMINI & GROQ PERSONAL API KEY STORAGE & LIVE DIAGNOSTIC TESTS
+    // ========================================================================
+    function getPersonalGeminiKey() {
+      return (localStorage.getItem(GEMINI_API_KEY_STORAGE) || '').trim();
+    }
+
+    function getPersonalGroqKey() {
+      return (localStorage.getItem(GROQ_API_KEY_STORAGE) || '').trim();
+    }
+
+    function hasAnyConfiguredAIKey() {
+      return Boolean(getPersonalGeminiKey() || getPersonalGroqKey());
+    }
+
+    function syncGeminiApiKeyUI() {
+      const gemInput = document.getElementById('gemini-api-key-input');
+      const groqInput = document.getElementById('groq-api-key-input');
+      const badge = document.getElementById('gemini-key-badge');
+      const gKey = getPersonalGeminiKey();
+      const qKey = getPersonalGroqKey();
+
+      if (gemInput && gKey) gemInput.value = gKey;
+      if (groqInput && qKey) groqInput.value = qKey;
+      if (badge) {
+        badge.classList.toggle('hidden', !gKey && !qKey);
+      }
+    }
+
+    function savePersonalGeminiKey() {
+      const val = (document.getElementById('gemini-api-key-input')?.value || '').trim();
+      if (!val) {
+        localStorage.removeItem(GEMINI_API_KEY_STORAGE);
+        syncGeminiApiKeyUI();
+        showToast('Chiave Gemini rimossa', 'info');
+        return;
+      }
+      localStorage.setItem(GEMINI_API_KEY_STORAGE, val);
+      syncGeminiApiKeyUI();
+      showToast('Chiave API Gemini salvata sul dispositivo!', 'key');
+    }
+
+    function savePersonalGroqKey() {
+      const val = (document.getElementById('groq-api-key-input')?.value || '').trim();
+      if (!val) {
+        localStorage.removeItem(GROQ_API_KEY_STORAGE);
+        syncGeminiApiKeyUI();
+        showToast('Chiave Groq rimossa', 'info');
+        return;
+      }
+      localStorage.setItem(GROQ_API_KEY_STORAGE, val);
+      syncGeminiApiKeyUI();
+      showToast('Chiave API Groq salvata sul dispositivo!', 'key');
+    }
+
+    async function testPersonalGeminiKey() {
+      const resEl = document.getElementById('gemini-key-test-result');
+      const key = (document.getElementById('gemini-api-key-input')?.value || getPersonalGeminiKey()).trim();
+      if (!resEl) return;
+      if (!key) {
+        resEl.textContent = 'Inserisci prima una chiave API Gemini (AIza...).';
+        resEl.className = 'text-[11px] font-semibold text-red-600';
+        return;
+      }
+      resEl.textContent = 'Verifica connessione con Google Gemini in corso...';
+      resEl.className = 'text-[11px] font-semibold opacity-80';
+
+      for (const model of ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-3-flash-preview']) {
+        try {
+          const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts: [{ text: 'Rispondi solo OK' }] }]
+            })
+          });
+          if (resp.ok) {
+            localStorage.setItem(GEMINI_API_KEY_STORAGE, key);
+            syncGeminiApiKeyUI();
+            resEl.textContent = `✓ Chiave Gemini attiva e funzionante (${model})!`;
+            resEl.className = 'text-[11px] font-bold text-green-700';
+            return;
+          }
+          const errData = await resp.json().catch(() => ({}));
+          if (resp.status === 400 || resp.status === 403) {
+            resEl.textContent = `✗ Chiave non valida: ${errData?.error?.message || 'controlla il codice copiato'}`;
+            resEl.className = 'text-[11px] font-semibold text-red-600';
+            return;
+          }
+        } catch (e) {}
+      }
+      resEl.textContent = '✗ Impossibile contattare Gemini (quota esaurita o rete bloccata).';
+      resEl.className = 'text-[11px] font-semibold text-red-600';
+    }
+
+    async function fetchAvailableGroqTextModels(groqKey, preferVision = false) {
+      try {
+        const resp = await fetch('https://api.groq.com/openai/v1/models', {
+          headers: { 'Authorization': `Bearer ${groqKey}` }
+        });
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          return {
+            models: [],
+            authError: errData?.error?.message || `Errore autenticazione Groq (HTTP ${resp.status})`
+          };
+        }
+        const json = await resp.json();
+        const ids = (json.data || [])
+          .map(m => m.id)
+          .filter(id => !/whisper|guard|tts|embed|orpheus|playai/i.test(id));
+
+        const priority = preferVision
+          ? [/llama-4/i, /vision/i, /gpt-oss-120b/i, /llama-3\.3/i, /qwen/i, /llama-3\.1/i]
+          : [/gpt-oss-120b/i, /llama-4/i, /llama-3\.3/i, /qwen/i, /llama-3\.1/i, /gemma/i];
+
+        const sorted = [...ids].sort((a, b) => {
+          const idxA = priority.findIndex(rx => rx.test(a));
+          const idxB = priority.findIndex(rx => rx.test(b));
+          return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+        });
+
+        return {
+          models: sorted.length ? sorted : ['llama-3.1-8b-instant'],
+          authError: ''
+        };
+      } catch (e) {
+        return { models: [], authError: 'Rete non raggiungibile verso api.groq.com' };
+      }
+    }
+
+    async function testPersonalGroqKey() {
+      const resEl = document.getElementById('groq-key-test-result');
+      const key = (document.getElementById('groq-api-key-input')?.value || getPersonalGroqKey()).trim();
+      if (!resEl) return;
+      if (!key) {
+        resEl.textContent = 'Inserisci prima una chiave API Groq (gsk_...).';
+        resEl.className = 'text-[11px] font-semibold text-red-600';
+        return;
+      }
+
+      resEl.textContent = 'Rilevamento modelli attivi sul tuo account Groq...';
+      resEl.className = 'text-[11px] font-semibold opacity-80';
+
+      const { models, authError } = await fetchAvailableGroqTextModels(key, false);
+      if (authError) {
+        resEl.textContent = `✗ ${authError}`;
+        resEl.className = 'text-[11px] font-semibold text-red-600';
+        return;
+      }
+
+      for (const model of models.slice(0, 4)) {
+        try {
+          const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${key}`
+            },
+            body: JSON.stringify({
+              model,
+              messages: [{ role: 'user', content: 'Rispondi solo OK' }],
+              max_tokens: 5
+            })
+          });
+          if (resp.ok) {
+            localStorage.setItem(GROQ_API_KEY_STORAGE, key);
+            syncGeminiApiKeyUI();
+            resEl.textContent = `✓ Chiave Groq attiva e funzionante (${model})!`;
+            resEl.className = 'text-[11px] font-bold text-green-700';
+            return;
+          }
+        } catch (e) {}
+      }
+
+      resEl.textContent = '✗ Nessun modello chat ha risposto sul tuo account Groq.';
+      resEl.className = 'text-[11px] font-semibold text-red-600';
+    }
+
+    // ========================================================================
+    // RECIPE DETAIL MODAL, SERVINGS SCALER, GOOGLE KEEP & PDF EXPORT
+    // ========================================================================
+    function openRecipeDetail(id, overrideServings = null) {
       const r = recipes.find(item => item.id === id);
       if (!r) return;
+      const baseServings = Math.max(1, Number(r.servings) || 4);
+      currentDetailServings = overrideServings !== null ? Math.max(1, Number(overrideServings) || 1) : baseServings;
+      const scaledIngredients = getScaledIngredients(r, currentDetailServings);
+      const isScaled = currentDetailServings !== baseServings;
+
       const originMeta = getOriginMeta(r.origin, r.inheritedFrom);
       const container = document.getElementById('modal-detail-content');
 
@@ -2072,23 +1875,37 @@
               </p>
             ` : ''}
 
-            <!-- Metadata Grid -->
+            <!-- Metadata Grid with Interactive Servings Adjuster -->
             <div class="grid grid-cols-3 gap-2.5 p-3.5 rounded-2xl border"
                  style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
-              <div class="text-center">
+              <div class="text-center flex flex-col justify-center">
                 <span class="material-symbols-rounded text-[20px]" style="color: var(--md-sys-color-primary);">schedule</span>
                 <p class="text-[11px]" style="color: var(--md-sys-color-on-surface-variant);">Tempo totale</p>
                 <p class="text-xs sm:text-sm font-extrabold">${formatDuration(r.totalTime)}</p>
               </div>
-              <div class="text-center border-x" style="border-color: var(--md-sys-color-outline-variant);">
+              <div class="text-center border-x flex flex-col justify-center" style="border-color: var(--md-sys-color-outline-variant);">
                 <span class="material-symbols-rounded text-[20px]" style="color: var(--md-sys-color-primary);">signal_cellular_alt</span>
                 <p class="text-[11px]" style="color: var(--md-sys-color-on-surface-variant);">Difficoltà</p>
                 <p class="text-xs sm:text-sm font-extrabold">${escapeHtml(r.difficulty)}</p>
               </div>
-              <div class="text-center">
+              <div class="text-center flex flex-col justify-center items-center">
                 <span class="material-symbols-rounded text-[20px]" style="color: var(--md-sys-color-primary);">group</span>
                 <p class="text-[11px]" style="color: var(--md-sys-color-on-surface-variant);">Porzioni</p>
-                <p class="text-xs sm:text-sm font-extrabold">${r.servings || 4} pers.</p>
+                <div class="flex items-center justify-center gap-1.5 mt-0.5">
+                  <button type="button" onclick="changeDetailServings('${r.id}', -1)"
+                          aria-label="Riduci porzioni"
+                          class="w-6 h-6 rounded-full flex items-center justify-center font-extrabold text-sm transition-transform active:scale-90"
+                          style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);">
+                    −
+                  </button>
+                  <span class="text-xs sm:text-sm font-extrabold min-w-[3.2rem]">${currentDetailServings} pers.</span>
+                  <button type="button" onclick="changeDetailServings('${r.id}', 1)"
+                          aria-label="Aumenta porzioni"
+                          class="w-6 h-6 rounded-full flex items-center justify-center font-extrabold text-sm transition-transform active:scale-90"
+                          style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);">
+                    +
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -2105,13 +1922,24 @@
               </div>
             ` : ''}
 
-            <!-- Ingredients + Google Keep Shopping Export -->
+            <!-- Ingredients + Servings Indicator + Google Keep Shopping Export -->
             <div class="space-y-3">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <h3 class="text-lg font-extrabold flex items-center gap-2">
-                  <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">grocery</span>
-                  Ingredienti
-                </h3>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="text-lg font-extrabold flex items-center gap-2">
+                    <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">grocery</span>
+                    Ingredienti
+                  </h3>
+                  ${isScaled ? `
+                    <button type="button" onclick="openRecipeDetail('${r.id}', ${baseServings})"
+                            title="Torna alle porzioni originali (${baseServings})"
+                            class="px-2.5 py-0.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1"
+                            style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
+                      <span>Adattati per ${currentDetailServings} (orig. ${baseServings})</span>
+                      <span class="material-symbols-rounded text-[13px]">restart_alt</span>
+                    </button>
+                  ` : ''}
+                </div>
                 <button type="button" onclick="exportIngredientsToGoogleKeep('${r.id}')"
                         class="m3-btn-tonal px-3.5 py-1.5 text-xs font-bold inline-flex items-center gap-1.5"
                         title="Invia lista ingredienti a Google Keep per la spesa">
@@ -2121,7 +1949,7 @@
               </div>
               <ul class="space-y-2 p-4 rounded-2xl border"
                   style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
-                ${(r.ingredients || []).map(ing => `
+                ${scaledIngredients.map(ing => `
                   <li class="flex items-start gap-2.5 text-sm">
                     <input type="checkbox" class="mt-1 rounded accent-current cursor-pointer" />
                     <span>${escapeHtml(ing)}</span>
@@ -2200,12 +2028,68 @@
       document.getElementById('modal-detail').classList.remove('hidden');
     }
 
+    function changeDetailServings(id, delta) {
+      const next = Math.max(1, Math.min(100, (currentDetailServings || 1) + delta));
+      openRecipeDetail(id, next);
+    }
+
+    function formatScaledAmount(val) {
+      if (!Number.isFinite(val) || val <= 0) return '';
+      const rounded = Math.round(val * 100) / 100;
+      if (Math.abs(rounded - Math.round(rounded)) < 0.04) {
+        return String(Math.round(rounded));
+      }
+      const oneDec = Math.round(val * 10) / 10;
+      return String(oneDec).replace('.', ',');
+    }
+
+    function scaleIngredientLine(line, factor) {
+      if (!line || Math.abs(factor - 1) < 0.001) return line;
+      if (/\b(q\.b\.|quanto basta|a piacere)\b/i.test(line) && !/^\s*\d/.test(line)) {
+        return line;
+      }
+
+      // Scale leading or mid-line quantities followed by culinary units or ingredient words,
+      // while avoiding technical type numbers like "farina 00", "tipo 1", "30 mesi", "180°C".
+      return line.replace(
+        /(^|[\s(+,])(\d+\s*\/\s*\d+|\d+(?:[.,]\d+)?)(?=\s*(?:g\b|gr\b|kg\b|ml\b|cl\b|dl\b|l\b|lt\b|litri?\b|cucchiai[oa]?\b|cucchiain[oi]?\b|bicchier[ei]?\b|tazz[ae]\b|pizzic[hi]?\b|spicchi[o]?\b|fett[ae]\b|fogl[ie]\b|ramett[oi]?\b|bustin[ae]\b|vasett[oi]?\b|scatol[ae]\b|lattin[ae]\b|mazzett[oi]?\b|uov[ao]\b|tuorl[oi]\b|album[ei]\b|patat[ae]\b|carot[ae]\b|cipoll[ae]\b|limon[ei]\b|aranc[ie]\b|mel[ae]\b|banan[ae]\b|zucchin[ae]\b|melanzan[ae]\b|pomodor[oi]\b|filett[oi]\b|medaglion[ei]\b|fettin[ae]\b|cost[ae]\b|d\s|di\s|[a-zàèéìòù]{3,}))/gi,
+        (match, prefix, numStr, offset, fullStr) => {
+          const prevWord = fullStr.slice(Math.max(0, offset - 12), offset).toLowerCase();
+          if (/\b(farina|tipo|stagionat[ao]|mesi|anni)\s*$/.test(prevWord)) {
+            return match;
+          }
+          let numericVal = 0;
+          if (numStr.includes('/')) {
+            const [num, den] = numStr.split('/').map(s => parseFloat(s.trim()));
+            if (den) numericVal = num / den;
+          } else {
+            numericVal = parseFloat(numStr.replace(',', '.'));
+          }
+          if (!numericVal) return match;
+          return prefix + formatScaledAmount(numericVal * factor);
+        }
+      );
+    }
+
+    function getScaledIngredients(recipe, targetServings) {
+      const baseServings = Math.max(1, Number(recipe.servings) || 4);
+      const effectiveServings = Math.max(1, Number(targetServings) || baseServings);
+      const factor = effectiveServings / baseServings;
+      return (recipe.ingredients || []).map(ing => scaleIngredientLine(ing, factor));
+    }
+
     async function exportIngredientsToGoogleKeep(id) {
       const r = recipes.find(item => item.id === id);
       if (!r) return;
 
-      const title = `Spesa: ${r.title}`;
-      const listText = (r.ingredients || []).map(ing => `☐ ${ing}`).join('\n');
+      const baseServings = Math.max(1, Number(r.servings) || 4);
+      const activeServings = document.getElementById('modal-detail')?.classList.contains('hidden')
+        ? baseServings
+        : (currentDetailServings || baseServings);
+      const scaledList = getScaledIngredients(r, activeServings);
+
+      const title = `Spesa: ${r.title} (${activeServings} pers.)`;
+      const listText = scaledList.map(ing => `☐ ${ing}`).join('\n');
       const fullPayload = `${title}\n\n${listText}`;
 
       copyTextFallback(fullPayload);
@@ -2247,6 +2131,12 @@
         return;
       }
 
+      const baseServings = Math.max(1, Number(r.servings) || 4);
+      const activeServings = document.getElementById('modal-detail')?.classList.contains('hidden')
+        ? baseServings
+        : (currentDetailServings || baseServings);
+      const activeIngredients = getScaledIngredients(r, activeServings);
+
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit: 'mm', format: 'a4' });
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -2282,7 +2172,7 @@
       doc.setFontSize(9.5);
       doc.setTextColor(rgb.r, rgb.g, rgb.b);
       const originLabel = r.origin === 'tramandata' ? (r.inheritedFrom ? `Tramandata da ${r.inheritedFrom}` : 'Tramandata') : (r.origin === 'prova' ? 'Prova Tecnica' : 'Personale');
-      doc.text(`${r.category.toUpperCase()}  |  ${originLabel}  |  Tempo: ${formatDuration(r.totalTime)}  |  Difficoltà: ${r.difficulty}  |  Porzioni: ${r.servings || 4}`, margin, y);
+      doc.text(`${r.category.toUpperCase()}  |  ${originLabel}  |  Tempo: ${formatDuration(r.totalTime)}  |  Difficoltà: ${r.difficulty}  |  Porzioni: ${activeServings}`, margin, y);
       y += 7;
 
       if (r.description) {
@@ -2298,13 +2188,13 @@
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
       doc.setTextColor(rgb.r, rgb.g, rgb.b);
-      doc.text('INGREDIENTI', margin, y);
+      doc.text(`INGREDIENTI (${activeServings} PERSONE)`, margin, y);
       y += 6;
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
       doc.setTextColor(35, 35, 35);
-      (r.ingredients || []).forEach(ing => {
+      activeIngredients.forEach(ing => {
         const lines = doc.splitTextToSize(`• ${ing}`, contentWidth - 4);
         if (y + lines.length * 5 > pageHeight - 18) {
           doc.addPage();
