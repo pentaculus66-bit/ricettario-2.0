@@ -1,0 +1,3511 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="terracotta">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Ricettario 2.0 — L'Archivio di Famiglia</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Inter + Material Symbols Rounded -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0" rel="stylesheet" />
+
+  <!-- PDF.js for client-side PDF parsing and rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- jsPDF for single-recipe A4 PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --app-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      --app-heading-font: 'Inter', system-ui, -apple-system, sans-serif;
+      --app-radius-card: 1.5rem;
+      --app-radius-pill: 9999px;
+      --app-card-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+      --app-bg-pattern: none;
+
+      --md-sys-color-primary: #9C4234;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #FFDAD4;
+      --md-sys-color-on-primary-container: #410000;
+
+      --md-sys-color-secondary: #775651;
+      --md-sys-color-on-secondary: #FFFFFF;
+      --md-sys-color-secondary-container: #FFDAD4;
+      --md-sys-color-on-secondary-container: #2C1512;
+
+      --md-sys-color-tertiary: #705C2E;
+      --md-sys-color-on-tertiary: #FFFFFF;
+      --md-sys-color-tertiary-container: #FBE0A6;
+      --md-sys-color-on-tertiary-container: #251A00;
+
+      --md-sys-color-background: #FFF8F6;
+      --md-sys-color-on-background: #231918;
+      --md-sys-color-surface: #FFF8F6;
+      --md-sys-color-on-surface: #231918;
+      --md-sys-color-on-surface-variant: #534341;
+
+      --md-sys-color-surface-container-lowest: #FFFFFF;
+      --md-sys-color-surface-container-low: #FFF0EE;
+      --md-sys-color-surface-container: #FCEAE7;
+      --md-sys-color-surface-container-high: #F6E4E1;
+      --md-sys-color-surface-container-highest: #F1DFDC;
+
+      --md-sys-color-outline: #857370;
+      --md-sys-color-outline-variant: #D8C2BE;
+    }
+
+    html[data-theme="salvia"] {
+      --md-sys-color-primary: #386A20;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #B8F397;
+      --md-sys-color-on-primary-container: #072100;
+      --md-sys-color-secondary: #55624C;
+      --md-sys-color-on-secondary: #FFFFFF;
+      --md-sys-color-secondary-container: #D8E7CB;
+      --md-sys-color-on-secondary-container: #131F0D;
+      --md-sys-color-tertiary: #386667;
+      --md-sys-color-on-tertiary: #FFFFFF;
+      --md-sys-color-tertiary-container: #BCEBEC;
+      --md-sys-color-on-tertiary-container: #002021;
+      --md-sys-color-background: #F7FBF1;
+      --md-sys-color-on-background: #181D16;
+      --md-sys-color-surface: #F7FBF1;
+      --md-sys-color-on-surface: #181D16;
+      --md-sys-color-on-surface-variant: #43483E;
+      --md-sys-color-surface-container-lowest: #FFFFFF;
+      --md-sys-color-surface-container-low: #F1F5EB;
+      --md-sys-color-surface-container: #EBEFE5;
+      --md-sys-color-surface-container-high: #E5E9DF;
+      --md-sys-color-surface-container-highest: #DFE4DA;
+      --md-sys-color-outline: #73796E;
+      --md-sys-color-outline-variant: #C3C8BC;
+    }
+
+    html[data-theme="mirtillo"] {
+      --md-sys-color-primary: #D0BCFF;
+      --md-sys-color-on-primary: #381E72;
+      --md-sys-color-primary-container: #4F378B;
+      --md-sys-color-on-primary-container: #EADDFF;
+      --md-sys-color-secondary: #CCC2DC;
+      --md-sys-color-on-secondary: #332D41;
+      --md-sys-color-secondary-container: #4A4458;
+      --md-sys-color-on-secondary-container: #E8DEF8;
+      --md-sys-color-tertiary: #EFB8C8;
+      --md-sys-color-on-tertiary: #492532;
+      --md-sys-color-tertiary-container: #633B48;
+      --md-sys-color-on-tertiary-container: #FFD8E4;
+      --md-sys-color-background: #141218;
+      --md-sys-color-on-background: #E6E0E9;
+      --md-sys-color-surface: #141218;
+      --md-sys-color-on-surface: #E6E0E9;
+      --md-sys-color-on-surface-variant: #CAC4D0;
+      --md-sys-color-surface-container-lowest: #0F0D13;
+      --md-sys-color-surface-container-low: #1D1B20;
+      --md-sys-color-surface-container: #211F26;
+      --md-sys-color-surface-container-high: #2B2930;
+      --md-sys-color-surface-container-highest: #36343B;
+      --md-sys-color-outline: #938F99;
+      --md-sys-color-outline-variant: #49454F;
+    }
+
+    html[data-theme="zafferano"] {
+      --md-sys-color-primary: #7B5800;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #FFDEA4;
+      --md-sys-color-on-primary-container: #261900;
+      --md-sys-color-secondary: #6C5C3F;
+      --md-sys-color-on-secondary: #FFFFFF;
+      --md-sys-color-secondary-container: #F6E0BB;
+      --md-sys-color-on-secondary-container: #251A04;
+      --md-sys-color-tertiary: #4C6544;
+      --md-sys-color-on-tertiary: #FFFFFF;
+      --md-sys-color-tertiary-container: #CEEBC2;
+      --md-sys-color-on-tertiary-container: #0A2007;
+      --md-sys-color-background: #FFF8F2;
+      --md-sys-color-on-background: #201B13;
+      --md-sys-color-surface: #FFF8F2;
+      --md-sys-color-on-surface: #201B13;
+      --md-sys-color-on-surface-variant: #4E4639;
+      --md-sys-color-surface-container-lowest: #FFFFFF;
+      --md-sys-color-surface-container-low: #FAF2E6;
+      --md-sys-color-surface-container: #F4ECE0;
+      --md-sys-color-surface-container-high: #EEE6DA;
+      --md-sys-color-surface-container-highest: #E9E1D5;
+      --md-sys-color-outline: #807667;
+      --md-sys-color-outline-variant: #D1C5B4;
+    }
+
+    html[data-theme="lavanda"] {
+      --md-sys-color-primary: #6750A4;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #EADDFF;
+      --md-sys-color-on-primary-container: #21005D;
+      --md-sys-color-secondary: #625B71;
+      --md-sys-color-on-secondary: #FFFFFF;
+      --md-sys-color-secondary-container: #E8DEF8;
+      --md-sys-color-on-secondary-container: #1D192B;
+      --md-sys-color-tertiary: #7D5260;
+      --md-sys-color-on-tertiary: #FFFFFF;
+      --md-sys-color-tertiary-container: #FFD8E4;
+      --md-sys-color-on-tertiary-container: #31111D;
+      --md-sys-color-background: #FEF7FF;
+      --md-sys-color-on-background: #1D1B20;
+      --md-sys-color-surface: #FEF7FF;
+      --md-sys-color-on-surface: #1D1B20;
+      --md-sys-color-on-surface-variant: #49454F;
+      --md-sys-color-surface-container-lowest: #FFFFFF;
+      --md-sys-color-surface-container-low: #F7F2FA;
+      --md-sys-color-surface-container: #F3EDF7;
+      --md-sys-color-surface-container-high: #ECE6F0;
+      --md-sys-color-surface-container-highest: #E6E0E9;
+      --md-sys-color-outline: #79747E;
+      --md-sys-color-outline-variant: #CCC4CF;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--app-font-family);
+      background-color: var(--md-sys-color-background);
+      background-image: var(--app-bg-pattern);
+      color: var(--md-sys-color-on-background);
+      transition: background-color 0.28s ease, color 0.28s ease;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, .skin-heading {
+      font-family: var(--app-heading-font);
+    }
+
+    .material-symbols-rounded {
+      font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+      user-select: none;
+    }
+
+    .material-symbols-rounded.filled {
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .skin-card {
+      border-radius: var(--app-radius-card);
+      box-shadow: var(--app-card-shadow);
+    }
+
+    .m3-btn-primary {
+      background-color: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      border-radius: var(--app-radius-pill);
+      transition: transform 0.15s ease, filter 0.2s ease, box-shadow 0.2s ease;
+    }
+    .m3-btn-primary:hover {
+      filter: brightness(1.06);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .m3-btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    .m3-btn-tonal {
+      background-color: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      border-radius: var(--app-radius-pill);
+      transition: transform 0.15s ease, filter 0.2s ease;
+    }
+    .m3-btn-tonal:hover {
+      filter: brightness(0.96);
+    }
+    .m3-btn-tonal:active {
+      transform: scale(0.97);
+    }
+
+    .m3-chip {
+      border-radius: var(--app-radius-pill);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      background-color: var(--md-sys-color-surface-container-lowest);
+      color: var(--md-sys-color-on-surface-variant);
+      transition: all 0.18s ease;
+    }
+    .m3-chip.active {
+      background-color: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      border-color: transparent;
+      font-weight: 600;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    #alphabet-rail {
+      touch-action: none;
+      user-select: none;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .animate-modal {
+      animation: modalIn 0.22s cubic-bezier(0.2, 0, 0, 1) forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP APP BAR -->
+  <header class="sticky top-0 z-30 backdrop-blur-md border-b transition-colors"
+          style="background-color: color-mix(in srgb, var(--md-sys-color-surface) 88%, transparent); border-color: var(--md-sys-color-outline-variant);">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+      <!-- Brand / Home Trigger -->
+      <button type="button" onclick="navigateTo('home')" class="flex items-center gap-2.5 text-left group focus:outline-none">
+        <div class="w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-105"
+             style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+          <span class="material-symbols-rounded filled text-[22px]">skillet</span>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-extrabold tracking-tight leading-none">Ricettario 2.0</h1>
+          <p class="text-[11px] font-medium hidden sm:block mt-0.5" style="color: var(--md-sys-color-on-surface-variant);">
+            Tesori culinari di casa
+          </p>
+        </div>
+      </button>
+
+      <!-- Navigation Switcher (Icon-only for clean smartphone & desktop fit) -->
+      <nav class="flex items-center gap-1 p-1 rounded-full border"
+           style="background-color: var(--md-sys-color-surface-container); border-color: var(--md-sys-color-outline-variant);">
+        <button id="nav-home-btn" type="button" onclick="navigateTo('home')"
+                title="Inizio" aria-label="Inizio"
+                class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5">
+          <span class="material-symbols-rounded text-[19px]">home</span>
+        </button>
+        <button id="nav-archive-btn" type="button" onclick="navigateTo('archive')"
+                title="Archivio completo" aria-label="Archivio completo"
+                class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5">
+          <span class="material-symbols-rounded text-[19px]">collections_bookmark</span>
+          <span id="nav-archive-count" class="hidden sm:inline-block px-1.5 py-0.2 rounded-full text-[10px] font-bold"
+                style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">0</span>
+        </button>
+      </nav>
+
+      <!-- Right Actions: Add Recipe, Backup/Drive, Theme & Custom Skin -->
+      <div class="flex items-center gap-1 sm:gap-2">
+        <button type="button" onclick="openAddModal('manual')"
+                class="m3-btn-primary px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold flex items-center gap-1.5 shadow-sm"
+                title="Aggiungi nuova ricetta">
+          <span class="material-symbols-rounded text-[20px]">add</span>
+          <span class="hidden md:inline">Nuova Ricetta</span>
+        </button>
+
+        <button type="button" onclick="openBackupModal()"
+                class="w-10 h-10 rounded-full flex items-center justify-center border transition-colors hover:opacity-80"
+                style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);"
+                title="Backup su Google Drive, Ripristino & Chiave API Gemini">
+          <span class="material-symbols-rounded text-[20px]">cloud_sync</span>
+        </button>
+
+        <div class="relative">
+          <button id="theme-menu-btn" type="button" onclick="toggleThemePopover()"
+                  class="w-10 h-10 rounded-full flex items-center justify-center border transition-colors hover:opacity-80 relative"
+                  style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);"
+                  title="Cambia tema colore o veste grafica">
+            <span class="material-symbols-rounded text-[20px]">palette</span>
+            <span id="custom-skin-active-dot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 rounded-full ring-2 ring-white"
+                  style="background-color: var(--md-sys-color-primary);"></span>
+          </button>
+
+          <!-- Theme & Custom Skin Popover -->
+          <div id="theme-popover"
+               class="hidden absolute right-0 mt-2 w-64 p-3 rounded-3xl shadow-xl border z-50 animate-modal"
+               style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+            <p class="text-[11px] font-bold uppercase tracking-wider px-2 pb-2"
+               style="color: var(--md-sys-color-on-surface-variant);">Temi Material You</p>
+            <div class="space-y-1">
+              <button type="button" onclick="setTheme('terracotta')" class="theme-option w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold hover:opacity-90" data-theme-opt="terracotta">
+                <span class="flex items-center gap-2.5"><span class="w-4 h-4 rounded-full bg-[#9C4234] inline-block"></span>Terracotta Calda</span>
+                <span class="material-symbols-rounded text-[16px] check-icon hidden">check</span>
+              </button>
+              <button type="button" onclick="setTheme('salvia')" class="theme-option w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold hover:opacity-90" data-theme-opt="salvia">
+                <span class="flex items-center gap-2.5"><span class="w-4 h-4 rounded-full bg-[#386A20] inline-block"></span>Salvia Botanica</span>
+                <span class="material-symbols-rounded text-[16px] check-icon hidden">check</span>
+              </button>
+              <button type="button" onclick="setTheme('mirtillo')" class="theme-option w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold hover:opacity-90" data-theme-opt="mirtillo">
+                <span class="flex items-center gap-2.5"><span class="w-4 h-4 rounded-full bg-[#4F378B] inline-block"></span>Mirtillo Notte (Scuro)</span>
+                <span class="material-symbols-rounded text-[16px] check-icon hidden">check</span>
+              </button>
+              <button type="button" onclick="setTheme('zafferano')" class="theme-option w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold hover:opacity-90" data-theme-opt="zafferano">
+                <span class="flex items-center gap-2.5"><span class="w-4 h-4 rounded-full bg-[#7B5800] inline-block"></span>Zafferano & Miele</span>
+                <span class="material-symbols-rounded text-[16px] check-icon hidden">check</span>
+              </button>
+              <button type="button" onclick="setTheme('lavanda')" class="theme-option w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold hover:opacity-90" data-theme-opt="lavanda">
+                <span class="flex items-center gap-2.5"><span class="w-4 h-4 rounded-full bg-[#6750A4] inline-block"></span>Lavanda Shabby</span>
+                <span class="material-symbols-rounded text-[16px] check-icon hidden">check</span>
+              </button>
+            </div>
+
+            <div class="my-2 border-t" style="border-color: var(--md-sys-color-outline-variant);"></div>
+
+            <button type="button" onclick="toggleThemePopover(); openCustomSkinModal();"
+                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-2xl text-xs font-bold transition-colors"
+                    style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+              <span class="flex items-center gap-2">
+                <span class="material-symbols-rounded text-[18px]">brush</span>
+                <span id="custom-skin-menu-label">Skin Personalizzata...</span>
+              </span>
+              <span class="material-symbols-rounded text-[16px]">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 pb-28">
+
+    <!-- VIEW 1: HOME (MACRO-SELECTION) -->
+    <section id="view-home" class="space-y-8">
+      <!-- Hero Welcome Banner -->
+      <div class="skin-card p-6 sm:p-8 border relative overflow-hidden"
+           style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
+        <div class="max-w-2xl relative z-10 space-y-3">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+               style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
+            <span class="material-symbols-rounded text-[16px]">favorite</span>
+            Cucina di casa & Tradizione
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
+            Cosa prepariamo oggi di buono?
+          </h2>
+          <p class="text-sm sm:text-base leading-relaxed" style="color: var(--md-sys-color-on-surface-variant);">
+            Scegli una raccolta per esplorare i piatti del cuore, le ricette custodite dai nostri parenti oppure gli esperimenti in cucina.
+          </p>
+          <div class="pt-2 flex flex-wrap gap-2.5">
+            <button type="button" onclick="openArchiveWithOrigin('all')"
+                    class="m3-btn-primary px-5 py-2.5 text-sm font-semibold inline-flex items-center gap-2">
+              <span class="material-symbols-rounded text-[19px]">menu_book</span>
+              Sfoglia tutto l'archivio
+            </button>
+            <button type="button" onclick="openAddModal('pdf')"
+                    class="m3-btn-tonal px-4 py-2.5 text-sm font-semibold inline-flex items-center gap-2">
+              <span class="material-symbols-rounded text-[19px]">picture_as_pdf</span>
+              Importa da PDF / Testo
+            </button>
+          </div>
+        </div>
+        <span class="material-symbols-rounded filled text-[160px] opacity-[0.06] absolute -right-4 -bottom-6 pointer-events-none select-none"
+              style="color: var(--md-sys-color-primary);">restaurant_menu</span>
+      </div>
+
+      <!-- Three Primary Origin Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <!-- Card 1: Ricette Personali -->
+        <button type="button" onclick="openArchiveWithOrigin('personale')"
+                class="skin-card text-left p-6 border transition-all hover:-translate-y-1 flex flex-col justify-between group"
+                style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center"
+                   style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+                <span class="material-symbols-rounded filled text-[26px]">favorite</span>
+              </div>
+              <span id="count-personale" class="px-3 py-1 rounded-full text-xs font-extrabold"
+                    style="background-color: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface);">0 ricette</span>
+            </div>
+            <div>
+              <h3 class="text-xl font-extrabold group-hover:underline">Ricette Personali</h3>
+              <p class="text-xs sm:text-sm mt-1.5 leading-relaxed" style="color: var(--md-sys-color-on-surface-variant);">
+                I nostri grandi classici di ogni giorno, i piatti preferiti di mia moglie e le certezze per ogni cena.
+              </p>
+            </div>
+          </div>
+          <div class="pt-5 flex items-center gap-1.5 text-xs font-bold" style="color: var(--md-sys-color-primary);">
+            <span>Apri raccolta</span>
+            <span class="material-symbols-rounded text-[18px] transition-transform group-hover:translate-x-1">arrow_forward</span>
+          </div>
+        </button>
+
+        <!-- Card 2: Ricette Tramandate -->
+        <button type="button" onclick="openArchiveWithOrigin('tramandata')"
+                class="skin-card text-left p-6 border transition-all hover:-translate-y-1 flex flex-col justify-between group"
+                style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center"
+                   style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
+                <span class="material-symbols-rounded filled text-[26px]">auto_stories</span>
+              </div>
+              <span id="count-tramandata" class="px-3 py-1 rounded-full text-xs font-extrabold"
+                    style="background-color: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface);">0 ricette</span>
+            </div>
+            <div>
+              <h3 class="text-xl font-extrabold group-hover:underline">Ricette Tramandate</h3>
+              <p class="text-xs sm:text-sm mt-1.5 leading-relaxed" style="color: var(--md-sys-color-on-surface-variant);">
+                I segreti delle nonne, delle mamme e dei parenti tramandati di generazione in generazione.
+              </p>
+            </div>
+          </div>
+          <div class="pt-5 flex items-center gap-1.5 text-xs font-bold" style="color: var(--md-sys-color-tertiary);">
+            <span>Esplora i tesori di famiglia</span>
+            <span class="material-symbols-rounded text-[18px] transition-transform group-hover:translate-x-1">arrow_forward</span>
+          </div>
+        </button>
+
+        <!-- Card 3: Prove Tecniche -->
+        <button type="button" onclick="openArchiveWithOrigin('prova')"
+                class="skin-card text-left p-6 border transition-all hover:-translate-y-1 flex flex-col justify-between group"
+                style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center"
+                   style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);">
+                <span class="material-symbols-rounded filled text-[26px]">science</span>
+              </div>
+              <span id="count-prova" class="px-3 py-1 rounded-full text-xs font-extrabold"
+                    style="background-color: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface);">0 ricette</span>
+            </div>
+            <div>
+              <h3 class="text-xl font-extrabold group-hover:underline">Prove Tecniche</h3>
+              <p class="text-xs sm:text-sm mt-1.5 leading-relaxed" style="color: var(--md-sys-color-on-surface-variant);">
+                Nuovi impasti, bilanciamenti da perfezionare, idee sperimentali e appunti di laboratorio culinario.
+              </p>
+            </div>
+          </div>
+          <div class="pt-5 flex items-center gap-1.5 text-xs font-bold" style="color: var(--md-sys-color-secondary);">
+            <span>Vai al laboratorio</span>
+            <span class="material-symbols-rounded text-[18px] transition-transform group-hover:translate-x-1">arrow_forward</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Featured / Recent Recipes -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg sm:text-xl font-extrabold">Ultime aggiunte o in evidenza</h3>
+          <button type="button" onclick="openArchiveWithOrigin('all')"
+                  class="text-xs font-bold flex items-center gap-1 hover:underline"
+                  style="color: var(--md-sys-color-primary);">
+            Vedi tutte <span class="material-symbols-rounded text-[16px]">chevron_right</span>
+          </button>
+        </div>
+        <div id="home-featured-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: FULL ARCHIVE WITH FILTERS & A-Z TOUCH RAIL -->
+    <section id="view-archive" class="hidden space-y-5 relative pr-7 sm:pr-10">
+      <!-- Origin Tabs + Search -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+          <button type="button" onclick="setOriginFilter('all')" data-origin="all" class="origin-tab m3-chip active px-4 py-2 text-xs font-semibold shrink-0">
+            Tutte
+          </button>
+          <button type="button" onclick="setOriginFilter('personale')" data-origin="personale" class="origin-tab m3-chip px-4 py-2 text-xs font-semibold shrink-0">
+            Personali
+          </button>
+          <button type="button" onclick="setOriginFilter('tramandata')" data-origin="tramandata" class="origin-tab m3-chip px-4 py-2 text-xs font-semibold shrink-0">
+            Tramandate
+          </button>
+          <button type="button" onclick="setOriginFilter('prova')" data-origin="prova" class="origin-tab m3-chip px-4 py-2 text-xs font-semibold shrink-0">
+            Prove Tecniche
+          </button>
+        </div>
+
+        <div class="relative flex-1 max-w-md">
+          <span class="material-symbols-rounded text-[20px] absolute left-3.5 top-1/2 -translate-y-1/2"
+                style="color: var(--md-sys-color-on-surface-variant);">search</span>
+          <input id="search-input" type="text" oninput="applyFilters()"
+                 placeholder="Cerca piatto, ingrediente o parente..."
+                 class="w-full pl-10 pr-9 py-2.5 rounded-full border text-sm focus:outline-none"
+                 style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);" />
+          <button id="clear-search-btn" type="button" onclick="clearSearch()"
+                  class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-xs opacity-70 hover:opacity-100">
+            <span class="material-symbols-rounded text-[18px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Chips (Antipasti, Primi, Secondi, Sides, Dolci, Biscotti, Lievitati) -->
+      <div id="category-chips" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+
+      <!-- Secondary Filters: Total Time, Difficulty, Occasion, Reset -->
+      <div class="flex flex-wrap items-center gap-2">
+        <select id="filter-time" onchange="applyFilters()"
+                class="px-3.5 py-2 rounded-full border text-xs font-semibold focus:outline-none cursor-pointer"
+                style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);">
+          <option value="all">Tempo: Tutti</option>
+          <option value="30">Fino a 30 min</option>
+          <option value="60">Fino a 1 ora</option>
+          <option value="120">Fino a 2 ore</option>
+          <option value="121">Oltre 2 ore</option>
+        </select>
+
+        <select id="filter-difficulty" onchange="applyFilters()"
+                class="px-3.5 py-2 rounded-full border text-xs font-semibold focus:outline-none cursor-pointer"
+                style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);">
+          <option value="all">Difficoltà: Tutte</option>
+          <option value="Basso">Basso</option>
+          <option value="Medio">Medio</option>
+          <option value="Elevato">Elevato</option>
+        </select>
+
+        <select id="filter-occasion" onchange="applyFilters()"
+                class="px-3.5 py-2 rounded-full border text-xs font-semibold focus:outline-none cursor-pointer"
+                style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);">
+          <option value="all">Occasione: Tutte</option>
+          <option value="In famiglia">In famiglia</option>
+          <option value="Compleanno">Compleanno</option>
+          <option value="Festività">Festività</option>
+          <option value="Appuntamento">Appuntamento</option>
+        </select>
+
+        <button id="reset-filters-btn" type="button" onclick="resetAllFilters()"
+                class="hidden px-3.5 py-2 rounded-full text-xs font-bold items-center gap-1"
+                style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
+          <span class="material-symbols-rounded text-[16px]">filter_alt_off</span>
+          Azzera filtri
+        </button>
+
+        <span id="archive-results-label" class="ml-auto text-xs font-semibold"
+              style="color: var(--md-sys-color-on-surface-variant);"></span>
+      </div>
+
+      <!-- Alphabetical Grouped Recipe List -->
+      <div id="archive-list-container" class="space-y-6"></div>
+
+      <!-- Empty State -->
+      <div id="archive-empty-state" class="hidden skin-card p-10 text-center border space-y-3"
+           style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+        <span class="material-symbols-rounded text-[48px]" style="color: var(--md-sys-color-outline);">search_off</span>
+        <h3 class="text-lg font-bold">Nessuna ricetta trovata</h3>
+        <p class="text-xs sm:text-sm max-w-md mx-auto" style="color: var(--md-sys-color-on-surface-variant);">
+          Prova a modificare i filtri selezionati oppure aggiungi subito una nuova ricetta all'archivio.
+        </p>
+        <button type="button" onclick="resetAllFilters()" class="m3-btn-tonal px-5 py-2 text-xs font-bold">
+          Mostra tutte le ricette
+        </button>
+      </div>
+
+      <!-- TOUCH-FRIENDLY A-Z ALPHABET RAIL (Fixed Right Edge) -->
+      <div id="alphabet-rail"
+           class="fixed right-1 sm:right-2.5 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center justify-center py-1.5 px-1 rounded-full border shadow-md backdrop-blur-md"
+           style="background-color: color-mix(in srgb, var(--md-sys-color-surface-container) 88%, transparent); border-color: var(--md-sys-color-outline-variant);">
+      </div>
+
+      <!-- Floating Letter Bubble on Touch Scrub -->
+      <div id="alphabet-bubble"
+           class="hidden fixed right-14 top-1/2 -translate-y-1/2 z-30 w-14 h-14 rounded-2xl shadow-xl flex items-center justify-center text-2xl font-extrabold pointer-events-none"
+           style="background-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">
+        A
+      </div>
+    </section>
+  </main>
+
+  <!-- FLOATING WIZARD FAB (Icon-only, positioned cleanly in bottom-right) -->
+  <button type="button" onclick="openWizardModal()"
+          title="Wizard: trova il piatto ideale"
+          aria-label="Wizard trova piatto ideale"
+          class="fixed right-4 sm:right-6 bottom-16 sm:bottom-20 z-30 w-14 h-14 rounded-2xl shadow-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+          style="background-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">
+    <span class="material-symbols-rounded filled text-[28px]">auto_awesome</span>
+  </button>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL 1: RECIPE DETAIL & EXPORT (PDF + GOOGLE KEEP SHOPPING LIST)     -->
+  <!-- ====================================================================== -->
+  <div id="modal-detail" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div id="modal-detail-content"
+         class="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border shadow-2xl animate-modal"
+         style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL 2: DISH FINDER WIZARD (3 STEPS -> PROPOSALS)                     -->
+  <!-- ====================================================================== -->
+  <div id="modal-wizard" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border shadow-2xl p-5 sm:p-6 space-y-5 animate-modal"
+         style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl flex items-center justify-center"
+               style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+            <span class="material-symbols-rounded filled">auto_awesome</span>
+          </div>
+          <div>
+            <h3 class="text-lg font-extrabold">Wizard Piatto Ideale</h3>
+            <p id="wizard-step-subtitle" class="text-xs" style="color: var(--md-sys-color-on-surface-variant);">Passaggio 1 di 3</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('modal-wizard')"
+                class="w-9 h-9 rounded-full flex items-center justify-center hover:opacity-80"
+                style="background-color: var(--md-sys-color-surface-container-high);">
+          <span class="material-symbols-rounded text-[20px]">close</span>
+        </button>
+      </div>
+
+      <div id="wizard-body" class="space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL 3: ADD / EDIT RECIPE (4-STEP MANUAL WIZARD OR PDF/TEXT IMPORT)   -->
+  <!-- ====================================================================== -->
+  <div id="modal-add" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border shadow-2xl p-5 sm:p-6 space-y-5 animate-modal"
+         style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+      <div class="flex items-center justify-between gap-2">
+        <div>
+          <h3 id="add-modal-title" class="text-lg sm:text-xl font-extrabold">Nuova Ricetta</h3>
+          <p id="add-modal-subtitle" class="text-xs" style="color: var(--md-sys-color-on-surface-variant);">Inserimento guidato</p>
+        </div>
+        <button type="button" onclick="closeModal('modal-add')"
+                class="w-9 h-9 rounded-full flex items-center justify-center hover:opacity-80"
+                style="background-color: var(--md-sys-color-surface-container-high);">
+          <span class="material-symbols-rounded text-[20px]">close</span>
+        </button>
+      </div>
+
+      <!-- Mode Switcher: Manual Wizard vs PDF / Text AI Import -->
+      <div id="add-mode-switcher" class="grid grid-cols-2 gap-2 p-1 rounded-full border"
+           style="background-color: var(--md-sys-color-surface-container); border-color: var(--md-sys-color-outline-variant);">
+        <button id="mode-manual-btn" type="button" onclick="switchAddMode('manual')"
+                class="py-2 px-3 rounded-full text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+          <span class="material-symbols-rounded text-[18px]">edit_note</span>
+          Inserimento Manuale
+        </button>
+        <button id="mode-pdf-btn" type="button" onclick="switchAddMode('pdf')"
+                class="py-2 px-3 rounded-full text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+          <span class="material-symbols-rounded text-[18px]">picture_as_pdf</span>
+          Importa da PDF / Testo
+        </button>
+      </div>
+
+      <!-- Step Progress Bar -->
+      <div id="add-stepper-bar" class="grid grid-cols-4 gap-1.5">
+        <div class="add-step-pill h-1.5 rounded-full transition-colors"></div>
+        <div class="add-step-pill h-1.5 rounded-full transition-colors"></div>
+        <div class="add-step-pill h-1.5 rounded-full transition-colors"></div>
+        <div class="add-step-pill h-1.5 rounded-full transition-colors"></div>
+      </div>
+
+      <div id="add-modal-body" class="space-y-4"></div>
+
+      <div id="add-modal-footer" class="pt-3 border-t flex items-center justify-between gap-2"
+           style="border-color: var(--md-sys-color-outline-variant);"></div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL 4: BACKUP / GOOGLE DRIVE & GEMINI PERSONAL API KEY               -->
+  <!-- ====================================================================== -->
+  <div id="modal-backup" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border shadow-2xl p-5 sm:p-6 space-y-5 animate-modal"
+         style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl flex items-center justify-center"
+               style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+            <span class="material-symbols-rounded">cloud_sync</span>
+          </div>
+          <div>
+            <h3 class="text-lg font-extrabold">Backup & Google Drive</h3>
+            <p class="text-xs" style="color: var(--md-sys-color-on-surface-variant);">Salva o ripristina l'intero ricettario</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('modal-backup')"
+                class="w-9 h-9 rounded-full flex items-center justify-center hover:opacity-80"
+                style="background-color: var(--md-sys-color-surface-container-high);">
+          <span class="material-symbols-rounded text-[20px]">close</span>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Export to Drive -->
+        <div class="p-4 rounded-2xl border space-y-3 skin-card"
+             style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
+          <div class="flex items-start gap-3">
+            <span class="material-symbols-rounded text-[24px] mt-0.5" style="color: var(--md-sys-color-primary);">upload_file</span>
+            <div>
+              <h4 class="font-bold text-sm">Esporta Backup per Google Drive</h4>
+              <p class="text-xs leading-relaxed mt-0.5" style="color: var(--md-sys-color-on-surface-variant);">
+                Genera un file <code>.json</code> completo di tutte le ricette, tag e foto da salvare nella tua cartella Google Drive.
+              </p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="exportBackupFile(false)"
+                    class="m3-btn-primary px-4 py-2 text-xs font-bold inline-flex items-center gap-1.5">
+              <span class="material-symbols-rounded text-[18px]">download</span>
+              Scarica file Backup (.json)
+            </button>
+            <button type="button" onclick="exportBackupFile(true)"
+                    class="m3-btn-tonal px-4 py-2 text-xs font-bold inline-flex items-center gap-1.5">
+              <span class="material-symbols-rounded text-[18px]">share</span>
+              Invia a Drive / Condividi
+            </button>
+          </div>
+        </div>
+
+        <!-- Import / Restore from Drive -->
+        <div class="p-4 rounded-2xl border space-y-3 skin-card"
+             style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
+          <div class="flex items-start gap-3">
+            <span class="material-symbols-rounded text-[24px] mt-0.5" style="color: var(--md-sys-color-tertiary);">restore_page</span>
+            <div>
+              <h4 class="font-bold text-sm">Ripristina Backup da Google Drive</h4>
+              <p class="text-xs leading-relaxed mt-0.5" style="color: var(--md-sys-color-on-surface-variant);">
+                Seleziona un file <code>.json</code> salvato in precedenza per unire le nuove ricette o sostituire l'archivio.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 text-xs font-semibold">
+            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+              <input type="radio" name="restore-mode" value="merge" checked />
+              Unisci all'archivio
+            </label>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+              <input type="radio" name="restore-mode" value="replace" />
+              Sostituisci tutto
+            </label>
+          </div>
+          <label class="m3-btn-tonal px-4 py-2 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-rounded text-[18px]">folder_open</span>
+            Seleziona file Backup (.json)
+            <input type="file" accept=".json,application/json" onchange="importBackupFile(event)" class="hidden" />
+          </label>
+        </div>
+
+        <!-- Personal AI API Keys Card (for standalone / offline downloaded HTML) -->
+        <div class="p-4 rounded-2xl border space-y-3 skin-card"
+             style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-start gap-3">
+              <span class="material-symbols-rounded text-[24px] mt-0.5" style="color: var(--md-sys-color-primary);">key</span>
+              <div>
+                <h4 class="font-bold text-sm">Motori IA Gratuiti (Gemini + Groq)</h4>
+                <p class="text-xs leading-relaxed mt-0.5" style="color: var(--md-sys-color-on-surface-variant);">
+                  Salva una o entrambe le chiavi gratuite nella memoria locale del dispositivo. Se una raggiunge il limite giornaliero, l'app passa automaticamente all'altra!
+                </p>
+              </div>
+            </div>
+            <span id="gemini-key-badge" class="hidden shrink-0 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-green-500/15 text-green-700">
+              IA Attiva
+            </span>
+          </div>
+
+          <!-- Gemini API Key -->
+          <div class="space-y-1.5 pt-1">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-extrabold" style="color: var(--md-sys-color-on-surface);">
+                1. Chiave API Google Gemini (principale)
+              </label>
+              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener"
+                 class="text-[11px] font-bold underline" style="color: var(--md-sys-color-primary);">
+                Ottieni gratis →
+              </a>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <input id="gemini-api-key-input" type="password"
+                     placeholder="Incolla chiave Gemini (es. AIzaSy...)"
+                     class="flex-1 min-w-0 px-3 py-2 rounded-xl border text-xs font-mono focus:outline-none"
+                     style="background-color: var(--md-sys-color-surface-container-high); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);" />
+              <button type="button" onclick="savePersonalGeminiKey()"
+                      class="m3-btn-primary px-3.5 py-2 text-xs font-bold shrink-0">
+                Salva
+              </button>
+              <button type="button" onclick="testPersonalGeminiKey()"
+                      class="m3-btn-tonal px-3 py-2 text-xs font-bold shrink-0">
+                Testa
+              </button>
+            </div>
+            <p id="gemini-key-test-result" class="hidden text-[11px] font-semibold leading-snug"></p>
+          </div>
+
+          <!-- Groq API Key (Parallel Free Backup Engine) -->
+          <div class="space-y-1.5 pt-2 border-t" style="border-color: var(--md-sys-color-outline-variant);">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-extrabold" style="color: var(--md-sys-color-on-surface);">
+                2. Chiave API Groq — Llama 3.3 70B (riserva gratuita ultra-veloce)
+              </label>
+              <a href="https://console.groq.com/keys" target="_blank" rel="noopener"
+                 class="text-[11px] font-bold underline" style="color: var(--md-sys-color-primary);">
+                Ottieni gratis →
+              </a>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <input id="groq-api-key-input" type="password"
+                     placeholder="Incolla chiave Groq (es. gsk_...)"
+                     class="flex-1 min-w-0 px-3 py-2 rounded-xl border text-xs font-mono focus:outline-none"
+                     style="background-color: var(--md-sys-color-surface-container-high); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);" />
+              <button type="button" onclick="savePersonalGroqKey()"
+                      class="m3-btn-primary px-3.5 py-2 text-xs font-bold shrink-0">
+                Salva
+              </button>
+              <button type="button" onclick="testPersonalGroqKey()"
+                      class="m3-btn-tonal px-3 py-2 text-xs font-bold shrink-0">
+                Testa
+              </button>
+            </div>
+            <p id="groq-key-test-result" class="hidden text-[11px] font-semibold leading-snug"></p>
+          </div>
+
+          <details class="text-xs rounded-xl p-2.5 border" style="background-color: var(--md-sys-color-surface-container); border-color: var(--md-sys-color-outline-variant);">
+            <summary class="font-bold cursor-pointer select-none" style="color: var(--md-sys-color-primary);">
+              Come ottenere le chiavi gratuite (nessuna carta richiesta)
+            </summary>
+            <ul class="list-disc ml-4 mt-2 space-y-1.5 leading-relaxed" style="color: var(--md-sys-color-on-surface-variant);">
+              <li><strong>Google Gemini:</strong> apri <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="underline font-bold" style="color: var(--md-sys-color-primary);">aistudio.google.com/apikey</a>, clicca <em>"Create API key"</em> e copia il codice <code>AIza...</code>.</li>
+              <li><strong>Groq (Parallelo gratuito):</strong> apri <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="underline font-bold" style="color: var(--md-sys-color-primary);">console.groq.com/keys</a>, entra con Google, clicca <em>"Create API Key"</em> e copia il codice <code>gsk_...</code>.</li>
+            </ul>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL 5: CUSTOM SKIN ENGINE (LOAD / PASTE JSON SKIN FROM CHAT)         -->
+  <!-- ====================================================================== -->
+  <div id="modal-skin" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border shadow-2xl p-5 sm:p-6 space-y-4 animate-modal"
+         style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl flex items-center justify-center"
+               style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+            <span class="material-symbols-rounded">brush</span>
+          </div>
+          <div>
+            <h3 class="text-lg font-extrabold">Veste Grafica Personalizzata</h3>
+            <p class="text-xs" style="color: var(--md-sys-color-on-surface-variant);">Carica o incolla una skin JSON creata in chat</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('modal-skin')"
+                class="w-9 h-9 rounded-full flex items-center justify-center hover:opacity-80"
+                style="background-color: var(--md-sys-color-surface-container-high);">
+          <span class="material-symbols-rounded text-[20px]">close</span>
+        </button>
+      </div>
+
+      <div id="active-skin-banner" class="hidden p-3 rounded-2xl border flex items-center justify-between gap-2"
+           style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); border-color: transparent;">
+        <div class="text-xs font-bold">
+          Skin attiva: <span id="active-skin-name">Personalizzata</span>
+        </div>
+        <button type="button" onclick="removeCustomSkin()"
+                class="px-3 py-1 rounded-full text-[11px] font-bold bg-black/15 hover:bg-black/25">
+          Ripristina tema standard
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <label class="m3-btn-tonal w-full py-2.5 px-4 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer">
+          <span class="material-symbols-rounded text-[18px]">upload_file</span>
+          Carica file Skin (.json)
+          <input type="file" accept=".json,application/json" onchange="handleSkinFileUpload(event)" class="hidden" />
+        </label>
+
+        <div>
+          <label class="block text-xs font-bold mb-1.5" style="color: var(--md-sys-color-on-surface-variant);">
+            Oppure incolla qui il codice JSON della veste grafica:
+          </label>
+          <textarea id="skin-json-textarea" rows="6"
+                    placeholder='{"name": "Trattoria Toscana", "colors": {"--md-sys-color-primary": "#8B2635", ...}}'
+                    class="w-full p-3 rounded-2xl border text-xs font-mono focus:outline-none"
+                    style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+          <button type="button" onclick="applyCustomSkinFromTextarea()"
+                  class="m3-btn-primary px-5 py-2.5 text-xs font-bold inline-flex items-center gap-1.5">
+            <span class="material-symbols-rounded text-[18px]">check_circle</span>
+            Applica Skin
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast"
+       class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full shadow-xl text-xs font-bold flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300"
+       style="background-color: var(--md-sys-color-on-surface); color: var(--md-sys-color-surface);">
+    <span id="toast-icon" class="material-symbols-rounded text-[18px]">check_circle</span>
+    <span id="toast-msg">Operazione completata</span>
+  </div>
+
+  <script>
+    // Configure PDF.js worker
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // ========================================================================
+    // CORE CONSTANTS & STATE
+    // ========================================================================
+    const STORAGE_KEY = 'ricettario_2_0_recipes_v1';
+    const THEME_KEY = 'ricettario_2_0_theme_v1';
+    const CUSTOM_SKIN_KEY = 'ricettario_2_0_custom_skin_v1';
+    const GEMINI_API_KEY_STORAGE = 'ricettario_2_0_gemini_api_key_v1';
+    const GROQ_API_KEY_STORAGE = 'ricettario_2_0_groq_api_key_v1';
+
+    const CATEGORIES = [
+      { id: 'all', label: 'Tutte', icon: 'apps' },
+      { id: 'Antipasti', label: 'Antipasti', icon: 'tapas' },
+      { id: 'Primi', label: 'Primi', icon: 'ramen_dining' },
+      { id: 'Secondi', label: 'Secondi', icon: 'kebab_dining' },
+      { id: 'Sides', label: 'Sides', icon: 'eco' },
+      { id: 'Dolci', label: 'Dolci', icon: 'cake' },
+      { id: 'Biscotti', label: 'Biscotti', icon: 'cookie' },
+      { id: 'Lievitati', label: 'Lievitati', icon: 'bakery_dining' }
+    ];
+
+    const OCCASIONS = ['In famiglia', 'Compleanno', 'Festività', 'Appuntamento'];
+    const DIFFICULTIES = ['Basso', 'Medio', 'Elevato'];
+    const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+    let recipes = [];
+    let currentOrigin = 'all';
+    let currentCategory = 'all';
+    let lastAiDiagnosticError = '';
+    let wizardState = { step: 1, category: '', occasion: '', difficulty: '' };
+    let addState = {
+      mode: 'manual',
+      step: 1,
+      editId: null,
+      title: '',
+      description: '',
+      category: 'Primi',
+      totalTime: 45,
+      servings: 4,
+      difficulty: 'Basso',
+      occasions: ['In famiglia'],
+      origin: 'personale',
+      inheritedFrom: '',
+      notes: '',
+      image: '',
+      ingredients: [''],
+      steps: [''],
+      pdfStatus: '',
+      pdfSourceLabel: '',
+      rawPdfPreview: ''
+    };
+
+    const SAMPLE_RECIPES = [
+      {
+        id: 'rec-1',
+        title: 'Lasagne della Domenica di Nonna Maria',
+        description: 'Sfoglia fresca all’uovo con ragù lento di manzo e maiale, besciamella vellutata e Parmigiano Reggiano 30 mesi.',
+        category: 'Primi',
+        totalTime: 180,
+        servings: 6,
+        difficulty: 'Medio',
+        occasions: ['In famiglia', 'Festività'],
+        origin: 'tramandata',
+        inheritedFrom: 'Nonna Maria',
+        notes: 'Il segreto è lasciar riposare la teglia 15 minuti fuori dal forno prima di tagliare le porzioni.',
+        image: '',
+        ingredients: [
+          '500 g di sfoglia fresca all’uovo per lasagne',
+          '600 g di macinato misto (manzo e maiale)',
+          '700 ml di passata di pomodoro rustica',
+          '1 carota, 1 costa di sedano, 1 cipolla dorata',
+          '100 ml di vino rosso fermo',
+          '1 litro di latte intero per la besciamella',
+          '80 g di burro e 80 g di farina 00',
+          '150 g di Parmigiano Reggiano grattugiato',
+          'Noce moscata, olio extravergine d’oliva, sale e pepe q.b.'
+        ],
+        steps: [
+          'Prepara un soffritto fine con sedano, carota e cipolla in olio extravergine d’oliva, poi rosola bene la carne trita.',
+          'Sfuma con il vino rosso, aggiungi la passata di pomodoro e lascia sobbollire coperto a fuoco dolce per almeno 2 ore.',
+          'Prepara la besciamella sciogliendo il burro, unendo la farina e versando il latte caldo a filo fino a ottenere una crema liscia.',
+          'Componi gli strati nella pirofila alternando besciamella, sfoglia, ragù e Parmigiano Reggiano.',
+          'Cuoci in forno statico preriscaldato a 180°C per 35 minuti fino a doratura croccante in superficie.'
+        ]
+      },
+      {
+        id: 'rec-2',
+        title: 'Tiramisù Classico al Mascarpone',
+        description: 'Il dolce preferito di casa: crema spumosa pastorizzata a freddo, savoiardi inzuppati nel caffè della moka e cacao amaro.',
+        category: 'Dolci',
+        totalTime: 40,
+        servings: 6,
+        difficulty: 'Basso',
+        occasions: ['Compleanno', 'In famiglia', 'Appuntamento'],
+        origin: 'personale',
+        inheritedFrom: '',
+        notes: 'Prepararlo la sera prima lo rende ancora più compatto e aromatico.',
+        image: '',
+        ingredients: [
+          '500 g di mascarpone fresco di alta qualità',
+          '4 uova freschissime a temperatura ambiente',
+          '120 g di zucchero semolato fine',
+          '300 g di savoiardi artigianali',
+          '350 ml di caffè espresso della moka non zuccherato, freddo',
+          'Cacao amaro in polvere q.b.'
+        ],
+        steps: [
+          'Separa i tuorli dagli albumi e monta i tuorli con metà dello zucchero fino a ottenere un composto chiaro e spumoso.',
+          'Incorpora delicatamente il mascarpone ai tuorli con una spatola dal basso verso l’alto.',
+          'Monta gli albumi a neve ben ferma aggiungendo gradualmente lo zucchero rimasto, poi uniscili alla crema senza smontarla.',
+          'Intingi velocemente i savoiardi nel caffè freddo e disponili sul fondo della pirofila, coprendo con metà della crema.',
+          'Ripeti con un secondo strato, livella la superficie, riponi in frigorifero per almeno 4 ore e spolvera con cacao amaro prima di servire.'
+        ]
+      },
+      {
+        id: 'rec-3',
+        title: 'Focaccia Alta Idratazione al Rosmarino',
+        description: 'Prova tecnica con farina tipo 1, 80% di idratazione e maturazione in frigo 24 ore per alveoli croccanti fuori e soffici dentro.',
+        category: 'Lievitati',
+        totalTime: 150,
+        servings: 8,
+        difficulty: 'Elevato',
+        occasions: ['In famiglia', 'Festività'],
+        origin: 'prova',
+        inheritedFrom: '',
+        notes: 'Versione v2: aumentato olio nell’emulsione finale, risultato eccellente.',
+        image: '',
+        ingredients: [
+          '500 g di farina tipo 1 forte (W300)',
+          '400 ml di acqua fredda',
+          '4 g di lievito di birra fresco',
+          '12 g di sale fino',
+          '40 ml di olio extravergine d’oliva + q.b. per la teglia',
+          'Rosmarino fresco e fiocchi di sale Maldon q.b.'
+        ],
+        steps: [
+          'Sciogli il lievito in 350 ml di acqua e mescola grossolanamente con tutta la farina. Lascia riposare coperto 30 minuti (autolisi).',
+          'Aggiungi il sale e l’acqua rimanente a filo impastando fino a incordatura, poi incorpora l’olio EVO.',
+          'Esegui 3 giri di pieghe in ciotola ogni 30 minuti, poi trasferisci in frigorifero per 18-24 ore.',
+          'Stendi delicatamente l’impasto nella teglia ben oliata, lascia lievitare 2 ore a temperatura ambiente e crea i classici buchi con i polpastrelli.',
+          'Irrora con emulsione di acqua e olio, aggiungi rosmarino e sale Maldon e cuoci a 240°C per 18-20 minuti.'
+        ]
+      },
+      {
+        id: 'rec-4',
+        title: 'Risotto allo Zafferano e Midollo',
+        description: 'Cremoso risotto alla milanese mantecato all’onda con pistilli di zafferano infusi e Parmigiano.',
+        category: 'Primi',
+        totalTime: 35,
+        servings: 4,
+        difficulty: 'Medio',
+        occasions: ['Appuntamento', 'Festività'],
+        origin: 'personale',
+        inheritedFrom: '',
+        notes: 'Mettere in infusione i pistilli di zafferano in mezzo bicchiere di brodo caldo 2 ore prima.',
+        image: '',
+        ingredients: [
+          '320 g di riso Carnaroli invecchiato',
+          '1 litro di brodo di carne caldo',
+          '0.5 g di pistilli di zafferano',
+          '1 scalogno piccolo',
+          '80 g di burro freddo a cubetti',
+          '70 g di Parmigiano Reggiano grattugiato',
+          '1/2 bicchiere di vino bianco secco'
+        ],
+        steps: [
+          'Appassisci lo scalogno tritato finemente con una noce di burro a fuoco dolce senza farlo bruciare.',
+          'Tosta il riso Carnaroli per 2 minuti finché i chicchi diventano traslucidi, quindi sfuma con il vino bianco.',
+          'Porta a cottura aggiungendo un mestolo di brodo bollente alla volta e mescolando regolarmente.',
+          'A 3 minuti dal termine versa l’infuso di zafferano; a fuoco spento manteca energicamente con burro freddo e Parmigiano.'
+        ]
+      },
+      {
+        id: 'rec-5',
+        title: 'Biscotti Frollini al Limone di Zia Clara',
+        description: 'Friabili biscotti da colazione e da tè profumati alla scorza di limone non trattato.',
+        category: 'Biscotti',
+        totalTime: 45,
+        servings: 25,
+        difficulty: 'Basso',
+        occasions: ['In famiglia', 'Compleanno'],
+        origin: 'tramandata',
+        inheritedFrom: 'Zia Clara',
+        notes: 'Non lavorare troppo la frolla per mantenerla friabile.',
+        image: '',
+        ingredients: [
+          '300 g di farina 00',
+          '150 g di burro freddo a pezzetti',
+          '110 g di zucchero a velo',
+          '2 tuorli d’uovo',
+          'Scorza grattugiata di 2 limoni biologici',
+          '1 pizzico di sale'
+        ],
+        steps: [
+          'Sabbiare la farina con il burro freddo e la scorza di limone fino a ottenere un composto bricioloso.',
+          'Unisci lo zucchero a velo, il pizzico di sale e i tuorli, compattando rapidamente il panetto.',
+          'Avvolgi nella pellicola e fai riposare in frigo 30 minuti, poi stendi a 5 mm e ritaglia i biscotti.',
+          'Cuoci a 175°C statico per 12-14 minuti finché i bordi risultano leggermente dorati.'
+        ]
+      },
+      {
+        id: 'rec-6',
+        title: 'Patate Croccanti al Forno alle Erbe',
+        description: 'Contorno dorato fuori e morbido dentro grazie alla precottura in acqua acidulata.',
+        category: 'Sides',
+        totalTime: 55,
+        servings: 4,
+        difficulty: 'Basso',
+        occasions: ['In famiglia', 'Festività'],
+        origin: 'personale',
+        inheritedFrom: '',
+        notes: 'Un cucchiaio di aceto nell’acqua di bollitura evita che le patate si sfaldino.',
+        image: '',
+        ingredients: [
+          '1 kg di patate a pasta gialla',
+          '4 cucchiai di olio extravergine d’oliva',
+          '2 spicchi d’aglio in camicia',
+          'Rosmarino, salvia e timo fresco',
+          'Sale grosso e pepe nero q.b.'
+        ],
+        steps: [
+          'Sbuccia le patate, tagliale a tocchetti regolari e sbollentale per 6 minuti in acqua salata con un cucchiaio di aceto.',
+          'Scolale bene e scuotile nello scolapasta per irruvidire leggermente la superficie esterna.',
+          'Condisci con olio EVO, aglio e trito d’erbe e cuoci in forno ventilato a 210°C per 35-40 minuti girandole a metà cottura.'
+        ]
+      },
+      {
+        id: 'rec-7',
+        title: 'Bruschette Stracciatella, Alici e Zeste di Limone',
+        description: 'Antipasto veloce e raffinato perfetto per aprire una cena speciale.',
+        category: 'Antipasti',
+        totalTime: 15,
+        servings: 4,
+        difficulty: 'Basso',
+        occasions: ['Appuntamento', 'In famiglia'],
+        origin: 'personale',
+        inheritedFrom: '',
+        notes: 'Usare pane casereccio a lievitazione naturale tagliato spesso.',
+        image: '',
+        ingredients: [
+          '4 fette spesse di pane casereccio',
+          '250 g di stracciatella pugliese fresca',
+          '8 filetti di alici del Cantabrico',
+          'Scorza di 1 limone non trattato',
+          'Olio extravergine d’oliva e pepe rosa q.b.'
+        ],
+        steps: [
+          'Tosta le fette di pane su una piastra ben calda con un filo d’olio EVO fino a renderle croccanti.',
+          'Distribuisci generosamente la stracciatella fresca sul pane ancora tiepido.',
+          'Adagia due filetti di alici su ogni bruschetta, completa con scorza di limone grattugiata e pepe rosa.'
+        ]
+      },
+      {
+        id: 'rec-8',
+        title: 'Filetto di Manzo in Crosta di Pepe Verde',
+        description: 'Secondo piatto elegante con salsa cremosa al brandy e pepe verde in salamoia.',
+        category: 'Secondi',
+        totalTime: 30,
+        servings: 2,
+        difficulty: 'Medio',
+        occasions: ['Appuntamento', 'Festività', 'Compleanno'],
+        origin: 'personale',
+        inheritedFrom: '',
+        notes: 'Lasciar riposare la carne 5 minuti avvolta in carta stagnola prima di servire.',
+        image: '',
+        ingredients: [
+          '2 medaglioni di filetto di manzo (circa 220 g l’uno)',
+          '2 cucchiai di pepe verde in salamoia',
+          '30 g di burro chiarificato',
+          '40 ml di brandy',
+          '120 ml di panna fresca liquida',
+          'Sale fino q.b.'
+        ],
+        steps: [
+          'Schiaccia grossolanamente metà dei grani di pepe verde e pressali sui due lati dei medaglioni di filetto.',
+          'Rosola i filetti nel burro spumeggiante 3 minuti per lato a fuoco vivace per sigillare i succhi.',
+          'Sfuma con il brandy, aggiungi la panna fresca e il pepe verde rimasto, lasciando restringere la salsa per 3 minuti.'
+        ]
+      }
+    ];
+
+    // ========================================================================
+    // INITIALIZATION & STORAGE
+    // ========================================================================
+    function initApp() {
+      loadRecipes();
+      initThemeAndSkin();
+      syncGeminiApiKeyUI();
+      renderCategoryChips();
+      buildAlphabetRail();
+      updateHomeCounts();
+      renderHomeFeatured();
+      navigateTo('home');
+    }
+
+    function loadRecipes() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            recipes = parsed;
+            return;
+          }
+        }
+      } catch (e) {}
+      recipes = JSON.parse(JSON.stringify(SAMPLE_RECIPES));
+      saveRecipes();
+    }
+
+    function saveRecipes() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
+      } catch (e) {
+        showToast('Spazio di memoria locale quasi pieno', 'warning');
+      }
+      updateHomeCounts();
+    }
+
+    function getPersonalGeminiKey() {
+      try {
+        return (localStorage.getItem(GEMINI_API_KEY_STORAGE) || '').replace(/\s+/g, '').trim();
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function getPersonalGroqKey() {
+      try {
+        return (localStorage.getItem(GROQ_API_KEY_STORAGE) || '').replace(/\s+/g, '').trim();
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function hasAnyConfiguredAIKey() {
+      return Boolean(getPersonalGeminiKey() || getPersonalGroqKey());
+    }
+
+    function syncGeminiApiKeyUI() {
+      const savedGemini = getPersonalGeminiKey();
+      const savedGroq = getPersonalGroqKey();
+      const input = document.getElementById('gemini-api-key-input');
+      const groqInput = document.getElementById('groq-api-key-input');
+      const badge = document.getElementById('gemini-key-badge');
+      if (input) input.value = savedGemini;
+      if (groqInput) groqInput.value = savedGroq;
+      if (badge) {
+        const activeCount = (savedGemini ? 1 : 0) + (savedGroq ? 1 : 0);
+        badge.classList.toggle('hidden', activeCount === 0);
+        if (activeCount > 0) {
+          badge.textContent = activeCount === 2 ? 'Gemini + Groq Attivi' : (savedGemini ? 'Gemini Attivo' : 'Groq Attivo');
+        }
+      }
+    }
+
+    function savePersonalGeminiKey() {
+      const input = document.getElementById('gemini-api-key-input');
+      const val = (input?.value || '').replace(/\s+/g, '').trim();
+      const resEl = document.getElementById('gemini-key-test-result');
+      if (resEl) resEl.classList.add('hidden');
+      try {
+        if (val) {
+          localStorage.setItem(GEMINI_API_KEY_STORAGE, val);
+          showToast('Chiave API Gemini salvata sul dispositivo!', 'key');
+        } else {
+          localStorage.removeItem(GEMINI_API_KEY_STORAGE);
+          showToast('Chiave API Gemini rimossa', 'key_off');
+        }
+      } catch (e) {}
+      syncGeminiApiKeyUI();
+    }
+
+    function savePersonalGroqKey() {
+      const input = document.getElementById('groq-api-key-input');
+      const val = (input?.value || '').replace(/\s+/g, '').trim();
+      const resEl = document.getElementById('groq-key-test-result');
+      if (resEl) resEl.classList.add('hidden');
+      try {
+        if (val) {
+          localStorage.setItem(GROQ_API_KEY_STORAGE, val);
+          showToast('Chiave API Groq salvata sul dispositivo!', 'key');
+        } else {
+          localStorage.removeItem(GROQ_API_KEY_STORAGE);
+          showToast('Chiave API Groq rimossa', 'key_off');
+        }
+      } catch (e) {}
+      syncGeminiApiKeyUI();
+    }
+
+    async function testPersonalGeminiKey() {
+      const input = document.getElementById('gemini-api-key-input');
+      const key = (input?.value || getPersonalGeminiKey() || '').replace(/\s+/g, '').trim();
+      const resEl = document.getElementById('gemini-key-test-result');
+      if (!resEl) return;
+
+      if (!key) {
+        resEl.textContent = 'Inserisci prima una chiave API Gemini (inizia con AIza...).';
+        resEl.className = 'text-[11px] font-semibold leading-snug text-amber-700';
+        resEl.classList.remove('hidden');
+        return;
+      }
+
+      localStorage.setItem(GEMINI_API_KEY_STORAGE, key);
+      syncGeminiApiKeyUI();
+
+      resEl.textContent = 'Verifica connessione con Google Gemini in corso...';
+      resEl.className = 'text-[11px] font-semibold leading-snug opacity-80';
+      resEl.classList.remove('hidden');
+
+      const testModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-3-flash-preview'];
+      let lastMsg = 'Errore sconosciuto';
+
+      for (const model of testModels) {
+        try {
+          const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts: [{ text: 'Rispondi solo OK' }] }],
+              generationConfig: { maxOutputTokens: 10 }
+            })
+          });
+
+          if (resp.ok) {
+            resEl.textContent = `✓ Chiave Gemini funzionante! Collegata al modello ${model}.`;
+            resEl.className = 'text-[11px] font-bold leading-snug text-green-700';
+            showToast('Chiave API Gemini verificata con successo!', 'check_circle');
+            return;
+          } else {
+            const errBody = await resp.json().catch(() => ({}));
+            lastMsg = errBody?.error?.message || `Errore HTTP ${resp.status}`;
+          }
+        } catch (e) {
+          lastMsg = 'Impossibile contattare Google (verifica connessione internet).';
+        }
+      }
+
+      resEl.textContent = `✗ ${lastMsg}`;
+      resEl.className = 'text-[11px] font-semibold leading-snug text-red-600';
+    }
+
+    async function testPersonalGroqKey() {
+      const input = document.getElementById('groq-api-key-input');
+      const key = (input?.value || getPersonalGroqKey() || '').replace(/\s+/g, '').trim();
+      const resEl = document.getElementById('groq-key-test-result');
+      if (!resEl) return;
+
+      if (!key) {
+        resEl.textContent = 'Inserisci prima una chiave API Groq (inizia con gsk_...).';
+        resEl.className = 'text-[11px] font-semibold leading-snug text-amber-700';
+        resEl.classList.remove('hidden');
+        return;
+      }
+
+      localStorage.setItem(GROQ_API_KEY_STORAGE, key);
+      syncGeminiApiKeyUI();
+
+      resEl.textContent = 'Verifica connessione con Groq (Llama 3.3 70B) in corso...';
+      resEl.className = 'text-[11px] font-semibold leading-snug opacity-80';
+      resEl.classList.remove('hidden');
+
+      try {
+        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [{ role: 'user', content: 'Rispondi solo OK' }],
+            max_tokens: 10
+          })
+        });
+
+        if (resp.ok) {
+          resEl.textContent = '✓ Chiave Groq funzionante! Collegata a Llama 3.3 70B.';
+          resEl.className = 'text-[11px] font-bold leading-snug text-green-700';
+          showToast('Chiave API Groq verificata con successo!', 'check_circle');
+        } else {
+          const errBody = await resp.json().catch(() => ({}));
+          const msg = errBody?.error?.message || `Errore HTTP ${resp.status}`;
+          resEl.textContent = `✗ ${msg}`;
+          resEl.className = 'text-[11px] font-semibold leading-snug text-red-600';
+        }
+      } catch (e) {
+        resEl.textContent = '✗ Impossibile contattare Groq (verifica connessione internet).';
+        resEl.className = 'text-[11px] font-semibold leading-snug text-red-600';
+      }
+    }
+
+    // ========================================================================
+    // THEME & CUSTOM SKIN ENGINE
+    // ========================================================================
+    function initThemeAndSkin() {
+      const savedTheme = localStorage.getItem(THEME_KEY) || 'terracotta';
+      setTheme(savedTheme, false);
+
+      try {
+        const rawSkin = localStorage.getItem(CUSTOM_SKIN_KEY);
+        if (rawSkin) {
+          const parsedSkin = JSON.parse(rawSkin);
+          applySkinObject(parsedSkin, false);
+        }
+      } catch (e) {}
+    }
+
+    function setTheme(themeName, clearSkin = true) {
+      document.documentElement.setAttribute('data-theme', themeName);
+      localStorage.setItem(THEME_KEY, themeName);
+
+      document.querySelectorAll('.theme-option').forEach(btn => {
+        const isCurrent = btn.getAttribute('data-theme-opt') === themeName;
+        btn.style.backgroundColor = isCurrent ? 'var(--md-sys-color-secondary-container)' : 'transparent';
+        btn.style.color = isCurrent ? 'var(--md-sys-color-on-secondary-container)' : 'var(--md-sys-color-on-surface)';
+        const check = btn.querySelector('.check-icon');
+        if (check) check.classList.toggle('hidden', !isCurrent);
+      });
+
+      if (clearSkin) {
+        removeCustomSkin(true);
+        const pop = document.getElementById('theme-popover');
+        if (pop) pop.classList.add('hidden');
+      }
+    }
+
+    function toggleThemePopover() {
+      const pop = document.getElementById('theme-popover');
+      if (pop) pop.classList.toggle('hidden');
+    }
+
+    function openCustomSkinModal() {
+      const modal = document.getElementById('modal-skin');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function handleSkinFileUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const ta = document.getElementById('skin-json-textarea');
+        if (ta) ta.value = e.target.result;
+        applyCustomSkinFromTextarea();
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function applyCustomSkinFromTextarea() {
+      const raw = (document.getElementById('skin-json-textarea')?.value || '').trim();
+      if (!raw) {
+        showToast('Incolla prima il codice JSON della skin', 'info');
+        return;
+      }
+      try {
+        const cleaned = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+        const skinObj = JSON.parse(cleaned);
+        applySkinObject(skinObj, true);
+        closeModal('modal-skin');
+      } catch (err) {
+        showToast('JSON della skin non valido: controlla le parentesi', 'error');
+      }
+    }
+
+    function applySkinObject(skin, persist = true) {
+      if (!skin || typeof skin !== 'object') return;
+      const root = document.documentElement;
+
+      if (skin.googleFontUrl) {
+        let linkEl = document.getElementById('custom-skin-font-link');
+        if (!linkEl) {
+          linkEl = document.createElement('link');
+          linkEl.id = 'custom-skin-font-link';
+          linkEl.rel = 'stylesheet';
+          document.head.appendChild(linkEl);
+        }
+        linkEl.href = skin.googleFontUrl;
+      }
+
+      if (skin.colors && typeof skin.colors === 'object') {
+        Object.entries(skin.colors).forEach(([cssVar, val]) => {
+          if (cssVar.startsWith('--')) root.style.setProperty(cssVar, val);
+        });
+      }
+
+      if (skin.styles && typeof skin.styles === 'object') {
+        Object.entries(skin.styles).forEach(([cssVar, val]) => {
+          if (cssVar.startsWith('--')) root.style.setProperty(cssVar, val);
+        });
+      }
+
+      const skinName = skin.name || 'Veste Personalizzata';
+      document.getElementById('custom-skin-active-dot')?.classList.remove('hidden');
+      const menuLabel = document.getElementById('custom-skin-menu-label');
+      if (menuLabel) menuLabel.textContent = skinName;
+      const banner = document.getElementById('active-skin-banner');
+      const nameEl = document.getElementById('active-skin-name');
+      if (banner && nameEl) {
+        nameEl.textContent = skinName;
+        banner.classList.remove('hidden');
+      }
+
+      if (persist) {
+        localStorage.setItem(CUSTOM_SKIN_KEY, JSON.stringify(skin));
+        showToast(`Veste "${skinName}" applicata!`, 'brush');
+      }
+    }
+
+    function removeCustomSkin(silent = false) {
+      const root = document.documentElement;
+      const varsToClear = [
+        '--app-font-family', '--app-heading-font', '--app-radius-card', '--app-radius-pill',
+        '--app-card-shadow', '--app-bg-pattern',
+        '--md-sys-color-primary', '--md-sys-color-on-primary', '--md-sys-color-primary-container', '--md-sys-color-on-primary-container',
+        '--md-sys-color-secondary', '--md-sys-color-on-secondary', '--md-sys-color-secondary-container', '--md-sys-color-on-secondary-container',
+        '--md-sys-color-tertiary', '--md-sys-color-on-tertiary', '--md-sys-color-tertiary-container', '--md-sys-color-on-tertiary-container',
+        '--md-sys-color-background', '--md-sys-color-on-background', '--md-sys-color-surface', '--md-sys-color-on-surface',
+        '--md-sys-color-on-surface-variant', '--md-sys-color-surface-container-lowest', '--md-sys-color-surface-container-low',
+        '--md-sys-color-surface-container', '--md-sys-color-surface-container-high', '--md-sys-color-surface-container-highest',
+        '--md-sys-color-outline', '--md-sys-color-outline-variant'
+      ];
+      varsToClear.forEach(v => root.style.removeProperty(v));
+      localStorage.removeItem(CUSTOM_SKIN_KEY);
+
+      document.getElementById('custom-skin-active-dot')?.classList.add('hidden');
+      const menuLabel = document.getElementById('custom-skin-menu-label');
+      if (menuLabel) menuLabel.textContent = 'Skin Personalizzata...';
+      document.getElementById('active-skin-banner')?.classList.add('hidden');
+
+      if (!silent) {
+        showToast('Ripristinato tema standard Material You', 'palette');
+      }
+    }
+
+    // ========================================================================
+    // NAVIGATION & HOME COUNTS
+    // ========================================================================
+    function navigateTo(view) {
+      const homeView = document.getElementById('view-home');
+      const archiveView = document.getElementById('view-archive');
+      const homeBtn = document.getElementById('nav-home-btn');
+      const archiveBtn = document.getElementById('nav-archive-btn');
+
+      if (!homeView || !archiveView) return;
+
+      if (view === 'home') {
+        homeView.classList.remove('hidden');
+        archiveView.classList.add('hidden');
+        homeBtn.style.backgroundColor = 'var(--md-sys-color-primary)';
+        homeBtn.style.color = 'var(--md-sys-color-on-primary)';
+        archiveBtn.style.backgroundColor = 'transparent';
+        archiveBtn.style.color = 'var(--md-sys-color-on-surface-variant)';
+        updateHomeCounts();
+        renderHomeFeatured();
+      } else {
+        homeView.classList.add('hidden');
+        archiveView.classList.remove('hidden');
+        archiveBtn.style.backgroundColor = 'var(--md-sys-color-primary)';
+        archiveBtn.style.color = 'var(--md-sys-color-on-primary)';
+        homeBtn.style.backgroundColor = 'transparent';
+        homeBtn.style.color = 'var(--md-sys-color-on-surface-variant)';
+        applyFilters();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openArchiveWithOrigin(origin) {
+      setOriginFilter(origin, false);
+      navigateTo('archive');
+    }
+
+    function updateHomeCounts() {
+      const total = recipes.length;
+      const personale = recipes.filter(r => r.origin === 'personale').length;
+      const tramandata = recipes.filter(r => r.origin === 'tramandata').length;
+      const prova = recipes.filter(r => r.origin === 'prova').length;
+
+      const navCount = document.getElementById('nav-archive-count');
+      if (navCount) navCount.textContent = total;
+      const cPers = document.getElementById('count-personale');
+      if (cPers) cPers.textContent = `${personale} ${personale === 1 ? 'ricetta' : 'ricette'}`;
+      const cTram = document.getElementById('count-tramandata');
+      if (cTram) cTram.textContent = `${tramandata} ${tramandata === 1 ? 'ricetta' : 'ricette'}`;
+      const cProv = document.getElementById('count-prova');
+      if (cProv) cProv.textContent = `${prova} ${prova === 1 ? 'ricetta' : 'ricette'}`;
+    }
+
+    function renderHomeFeatured() {
+      const grid = document.getElementById('home-featured-grid');
+      if (!grid) return;
+      const featured = recipes.slice(0, 6);
+      grid.innerHTML = featured.map(r => buildRecipeCardHTML(r)).join('');
+    }
+
+    // ========================================================================
+    // ARCHIVE FILTERING & RENDERING
+    // ========================================================================
+    function renderCategoryChips() {
+      const container = document.getElementById('category-chips');
+      if (!container) return;
+      container.innerHTML = CATEGORIES.map(cat => `
+        <button type="button" onclick="setCategoryFilter('${cat.id}')" data-cat="${cat.id}"
+                class="cat-chip m3-chip ${currentCategory === cat.id ? 'active' : ''} px-3.5 py-2 text-xs font-semibold inline-flex items-center gap-1.5 shrink-0">
+          <span class="material-symbols-rounded text-[17px]">${cat.icon}</span>
+          ${cat.label}
+        </button>
+      `).join('');
+    }
+
+    function setOriginFilter(origin, rerender = true) {
+      currentOrigin = origin;
+      document.querySelectorAll('.origin-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-origin') === origin);
+      });
+      if (rerender) applyFilters();
+    }
+
+    function setCategoryFilter(catId) {
+      currentCategory = catId;
+      document.querySelectorAll('.cat-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-cat') === catId);
+      });
+      applyFilters();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('search-input');
+      if (input) input.value = '';
+      applyFilters();
+    }
+
+    function resetAllFilters() {
+      currentOrigin = 'all';
+      currentCategory = 'all';
+      const searchEl = document.getElementById('search-input');
+      if (searchEl) searchEl.value = '';
+      const tEl = document.getElementById('filter-time');
+      if (tEl) tEl.value = 'all';
+      const dEl = document.getElementById('filter-difficulty');
+      if (dEl) dEl.value = 'all';
+      const oEl = document.getElementById('filter-occasion');
+      if (oEl) oEl.value = 'all';
+
+      setOriginFilter('all', false);
+      renderCategoryChips();
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const query = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+      const timeVal = document.getElementById('filter-time')?.value || 'all';
+      const diffVal = document.getElementById('filter-difficulty')?.value || 'all';
+      const occVal = document.getElementById('filter-occasion')?.value || 'all';
+
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (clearBtn) clearBtn.classList.toggle('hidden', query.length === 0);
+
+      const hasActiveFilters = currentOrigin !== 'all' || currentCategory !== 'all' || query !== '' || timeVal !== 'all' || diffVal !== 'all' || occVal !== 'all';
+      const resetBtn = document.getElementById('reset-filters-btn');
+      if (resetBtn) {
+        resetBtn.classList.toggle('hidden', !hasActiveFilters);
+        resetBtn.classList.toggle('inline-flex', hasActiveFilters);
+      }
+
+      const filtered = recipes.filter(r => {
+        if (currentOrigin !== 'all' && r.origin !== currentOrigin) return false;
+        if (currentCategory !== 'all' && r.category !== currentCategory) return false;
+        if (diffVal !== 'all' && r.difficulty !== diffVal) return false;
+        if (occVal !== 'all' && !(r.occasions || []).includes(occVal)) return false;
+
+        if (timeVal !== 'all') {
+          const t = Number(r.totalTime) || 0;
+          if (timeVal === '30' && t > 30) return false;
+          if (timeVal === '60' && t > 60) return false;
+          if (timeVal === '120' && t > 120) return false;
+          if (timeVal === '121' && t <= 120) return false;
+        }
+
+        if (query) {
+          const hay = [
+            r.title,
+            r.description,
+            r.category,
+            r.inheritedFrom,
+            ...(r.ingredients || [])
+          ].join(' ').toLowerCase();
+          if (!hay.includes(query)) return false;
+        }
+
+        return true;
+      }).sort((a, b) => a.title.localeCompare(b.title, 'it', { sensitivity: 'base' }));
+
+      const countLbl = document.getElementById('archive-results-label');
+      if (countLbl) countLbl.textContent = `${filtered.length} ${filtered.length === 1 ? 'ricetta' : 'ricette'}`;
+
+      renderGroupedArchive(filtered);
+    }
+
+    function renderGroupedArchive(list) {
+      const container = document.getElementById('archive-list-container');
+      const emptyState = document.getElementById('archive-empty-state');
+      if (!container || !emptyState) return;
+
+      if (list.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        updateAlphabetAvailability(new Set());
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      const groups = {};
+      const availableLetters = new Set();
+
+      list.forEach(r => {
+        const firstChar = (r.title || '#').trim().charAt(0).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const letter = /[A-Z]/.test(firstChar) ? firstChar : '#';
+        availableLetters.add(letter);
+        if (!groups[letter]) groups[letter] = [];
+        groups[letter].push(r);
+      });
+
+      updateAlphabetAvailability(availableLetters);
+
+      container.innerHTML = Object.keys(groups).sort().map(letter => `
+        <div id="letter-group-${letter}" class="space-y-3 scroll-mt-24">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-extrabold"
+                  style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+              ${letter}
+            </span>
+            <div class="h-px flex-1" style="background-color: var(--md-sys-color-outline-variant);"></div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${groups[letter].map(r => buildRecipeCardHTML(r)).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getOriginMeta(origin, inheritedFrom) {
+      if (origin === 'tramandata') {
+        return {
+          label: inheritedFrom ? `Da ${inheritedFrom}` : 'Tramandata',
+          icon: 'auto_stories',
+          bg: 'var(--md-sys-color-tertiary-container)',
+          fg: 'var(--md-sys-color-on-tertiary-container)'
+        };
+      }
+      if (origin === 'prova') {
+        return {
+          label: 'Prova Tecnica',
+          icon: 'science',
+          bg: 'var(--md-sys-color-secondary-container)',
+          fg: 'var(--md-sys-color-on-secondary-container)'
+        };
+      }
+      return {
+        label: 'Personale',
+        icon: 'favorite',
+        bg: 'var(--md-sys-color-primary-container)',
+        fg: 'var(--md-sys-color-on-primary-container)'
+      };
+    }
+
+    function buildRecipeCardHTML(r) {
+      const originMeta = getOriginMeta(r.origin, r.inheritedFrom);
+      const timeStr = formatDuration(r.totalTime);
+      return `
+        <article onclick="openRecipeDetail('${r.id}')"
+                 class="skin-card border overflow-hidden cursor-pointer transition-all hover:-translate-y-0.5 flex flex-col justify-between group"
+                 style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+          <div>
+            ${r.image ? `
+              <div class="h-36 w-full overflow-hidden border-b" style="border-color: var(--md-sys-color-outline-variant);">
+                <img src="${r.image}" alt="${escapeHtml(r.title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              </div>
+            ` : ''}
+            <div class="p-4 space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1"
+                      style="background-color: ${originMeta.bg}; color: ${originMeta.fg};">
+                  <span class="material-symbols-rounded text-[13px]">${originMeta.icon}</span>
+                  ${escapeHtml(originMeta.label)}
+                </span>
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full"
+                      style="background-color: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant);">
+                  ${escapeHtml(r.category)}
+                </span>
+              </div>
+
+              <h4 class="font-extrabold text-base leading-snug group-hover:underline line-clamp-2">
+                ${escapeHtml(r.title)}
+              </h4>
+
+              ${r.description ? `
+                <p class="text-xs line-clamp-2 leading-relaxed" style="color: var(--md-sys-color-on-surface-variant);">
+                  ${escapeHtml(r.description)}
+                </p>
+              ` : ''}
+            </div>
+          </div>
+
+          <div class="px-4 py-3 border-t flex items-center justify-between text-[11px] font-semibold"
+               style="border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface-variant);">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center gap-1">
+                <span class="material-symbols-rounded text-[15px]">schedule</span>
+                ${timeStr}
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <span class="material-symbols-rounded text-[15px]">signal_cellular_alt</span>
+                ${escapeHtml(r.difficulty)}
+              </span>
+            </div>
+            <button type="button" onclick="event.stopPropagation(); exportRecipeToPDF('${r.id}', false)"
+                    title="Esporta ricetta in PDF"
+                    class="w-7 h-7 rounded-full flex items-center justify-center hover:opacity-80"
+                    style="background-color: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-primary);">
+              <span class="material-symbols-rounded text-[16px]">picture_as_pdf</span>
+            </button>
+          </div>
+        </article>
+      `;
+    }
+
+    // ========================================================================
+    // TOUCH-SCRUBBABLE A-Z ALPHABET RAIL
+    // ========================================================================
+    function buildAlphabetRail() {
+      const rail = document.getElementById('alphabet-rail');
+      if (!rail) return;
+      rail.innerHTML = ALPHABET.map(letter => `
+        <button type="button" data-letter="${letter}"
+                class="alpha-btn w-5 h-4 sm:w-6 sm:h-5 text-[9px] sm:text-[10px] font-extrabold leading-none flex items-center justify-center rounded-full transition-transform">
+          ${letter}
+        </button>
+      `).join('');
+
+      const handleScrub = (clientY) => {
+        const rect = rail.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(0.999, (clientY - rect.top) / rect.height));
+        const index = Math.floor(ratio * ALPHABET.length);
+        const letter = ALPHABET[index];
+        if (!letter) return;
+
+        const bubble = document.getElementById('alphabet-bubble');
+        if (bubble) {
+          bubble.textContent = letter;
+          bubble.classList.remove('hidden');
+        }
+
+        const targetGroup = document.getElementById(`letter-group-${letter}`);
+        if (targetGroup) {
+          targetGroup.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+      };
+
+      const endScrub = () => {
+        const bubble = document.getElementById('alphabet-bubble');
+        if (bubble) bubble.classList.add('hidden');
+      };
+
+      rail.addEventListener('touchstart', (e) => {
+        if (e.touches[0]) handleScrub(e.touches[0].clientY);
+      }, { passive: true });
+
+      rail.addEventListener('touchmove', (e) => {
+        if (e.touches[0]) handleScrub(e.touches[0].clientY);
+      }, { passive: true });
+
+      rail.addEventListener('touchend', endScrub);
+      rail.addEventListener('touchcancel', endScrub);
+
+      rail.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-letter]');
+        if (!btn) return;
+        const letter = btn.getAttribute('data-letter');
+        const targetGroup = document.getElementById(`letter-group-${letter}`);
+        if (targetGroup) {
+          targetGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
+    function updateAlphabetAvailability(availableSet) {
+      document.querySelectorAll('.alpha-btn').forEach(btn => {
+        const letter = btn.getAttribute('data-letter');
+        const hasItems = availableSet.has(letter);
+        btn.style.opacity = hasItems ? '1' : '0.32';
+        btn.style.color = hasItems ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-on-surface-variant)';
+      });
+    }
+
+    // ========================================================================
+    // RECIPE DETAIL MODAL, GOOGLE KEEP EXPORT & PDF EXPORT
+    // ========================================================================
+    function openRecipeDetail(id) {
+      const r = recipes.find(item => item.id === id);
+      if (!r) return;
+      const originMeta = getOriginMeta(r.origin, r.inheritedFrom);
+      const container = document.getElementById('modal-detail-content');
+
+      container.innerHTML = `
+        <div class="relative">
+          ${r.image ? `
+            <div class="h-56 sm:h-72 w-full overflow-hidden">
+              <img src="${r.image}" alt="${escapeHtml(r.title)}" class="w-full h-full object-cover" />
+            </div>
+          ` : ''}
+
+          <div class="p-5 sm:p-7 space-y-6">
+            <!-- Top Action Bar -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="space-y-2">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1"
+                        style="background-color: ${originMeta.bg}; color: ${originMeta.fg};">
+                    <span class="material-symbols-rounded text-[15px]">${originMeta.icon}</span>
+                    ${escapeHtml(originMeta.label)}
+                  </span>
+                  <span class="px-3 py-1 rounded-full text-xs font-bold"
+                        style="background-color: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant);">
+                    ${escapeHtml(r.category)}
+                  </span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold leading-tight">${escapeHtml(r.title)}</h2>
+              </div>
+
+              <button type="button" onclick="closeModal('modal-detail')"
+                      class="w-10 h-10 rounded-full shrink-0 flex items-center justify-center hover:opacity-80"
+                      style="background-color: var(--md-sys-color-surface-container-high);">
+                <span class="material-symbols-rounded text-[22px]">close</span>
+              </button>
+            </div>
+
+            ${r.description ? `
+              <p class="text-sm leading-relaxed" style="color: var(--md-sys-color-on-surface-variant);">
+                ${escapeHtml(r.description)}
+              </p>
+            ` : ''}
+
+            <!-- Metadata Grid -->
+            <div class="grid grid-cols-3 gap-2.5 p-3.5 rounded-2xl border"
+                 style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
+              <div class="text-center">
+                <span class="material-symbols-rounded text-[20px]" style="color: var(--md-sys-color-primary);">schedule</span>
+                <p class="text-[11px]" style="color: var(--md-sys-color-on-surface-variant);">Tempo totale</p>
+                <p class="text-xs sm:text-sm font-extrabold">${formatDuration(r.totalTime)}</p>
+              </div>
+              <div class="text-center border-x" style="border-color: var(--md-sys-color-outline-variant);">
+                <span class="material-symbols-rounded text-[20px]" style="color: var(--md-sys-color-primary);">signal_cellular_alt</span>
+                <p class="text-[11px]" style="color: var(--md-sys-color-on-surface-variant);">Difficoltà</p>
+                <p class="text-xs sm:text-sm font-extrabold">${escapeHtml(r.difficulty)}</p>
+              </div>
+              <div class="text-center">
+                <span class="material-symbols-rounded text-[20px]" style="color: var(--md-sys-color-primary);">group</span>
+                <p class="text-[11px]" style="color: var(--md-sys-color-on-surface-variant);">Porzioni</p>
+                <p class="text-xs sm:text-sm font-extrabold">${r.servings || 4} pers.</p>
+              </div>
+            </div>
+
+            <!-- Occasion Tags -->
+            ${(r.occasions && r.occasions.length) ? `
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-xs font-bold mr-1" style="color: var(--md-sys-color-on-surface-variant);">Ideale per:</span>
+                ${r.occasions.map(occ => `
+                  <span class="px-3 py-1 rounded-full text-xs font-semibold border"
+                        style="background-color: var(--md-sys-color-surface-container); border-color: var(--md-sys-color-outline-variant);">
+                    ${escapeHtml(occ)}
+                  </span>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            <!-- Ingredients + Google Keep Shopping Export -->
+            <div class="space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="text-lg font-extrabold flex items-center gap-2">
+                  <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">grocery</span>
+                  Ingredienti
+                </h3>
+                <button type="button" onclick="exportIngredientsToGoogleKeep('${r.id}')"
+                        class="m3-btn-tonal px-3.5 py-1.5 text-xs font-bold inline-flex items-center gap-1.5"
+                        title="Invia lista ingredienti a Google Keep per la spesa">
+                  <span class="material-symbols-rounded text-[17px]">checklist</span>
+                  Invia a Google Keep
+                </button>
+              </div>
+              <ul class="space-y-2 p-4 rounded-2xl border"
+                  style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
+                ${(r.ingredients || []).map(ing => `
+                  <li class="flex items-start gap-2.5 text-sm">
+                    <input type="checkbox" class="mt-1 rounded accent-current cursor-pointer" />
+                    <span>${escapeHtml(ing)}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+
+            <!-- Steps -->
+            <div class="space-y-3">
+              <h3 class="text-lg font-extrabold flex items-center gap-2">
+                <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">format_list_numbered</span>
+                Procedimento
+              </h3>
+              <ol class="space-y-3">
+                ${(r.steps || []).map((st, i) => `
+                  <li class="flex items-start gap-3 p-3.5 rounded-2xl border"
+                      style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);">
+                    <span class="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-xs font-extrabold"
+                          style="background-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">
+                      ${i + 1}
+                    </span>
+                    <p class="text-sm leading-relaxed pt-0.5">${escapeHtml(st)}</p>
+                  </li>
+                `).join('')}
+              </ol>
+            </div>
+
+            <!-- Notes -->
+            ${r.notes ? `
+              <div class="p-4 rounded-2xl border space-y-1"
+                   style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); border-color: transparent;">
+                <p class="text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5">
+                  <span class="material-symbols-rounded text-[16px]">tips_and_updates</span>
+                  Segreti & Note
+                </p>
+                <p class="text-xs sm:text-sm leading-relaxed">${escapeHtml(r.notes)}</p>
+              </div>
+            ` : ''}
+
+            <!-- Footer Actions: PDF Export, Share PDF, Edit, Delete -->
+            <div class="pt-4 border-t flex flex-wrap items-center justify-between gap-2"
+                 style="border-color: var(--md-sys-color-outline-variant);">
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" onclick="exportRecipeToPDF('${r.id}', false)"
+                        class="m3-btn-primary px-4 py-2.5 text-xs font-bold inline-flex items-center gap-1.5">
+                  <span class="material-symbols-rounded text-[18px]">picture_as_pdf</span>
+                  Esporta PDF
+                </button>
+                <button type="button" onclick="exportRecipeToPDF('${r.id}', true)"
+                        class="m3-btn-tonal px-3.5 py-2.5 text-xs font-bold inline-flex items-center gap-1.5"
+                        title="Condividi PDF">
+                  <span class="material-symbols-rounded text-[18px]">share</span>
+                  Condividi
+                </button>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="openEditRecipe('${r.id}')"
+                        class="px-3.5 py-2 rounded-full border text-xs font-bold inline-flex items-center gap-1"
+                        style="border-color: var(--md-sys-color-outline-variant);">
+                  <span class="material-symbols-rounded text-[17px]">edit</span>
+                  Modifica
+                </button>
+                <button type="button" onclick="deleteRecipe('${r.id}')"
+                        class="px-3.5 py-2 rounded-full text-xs font-bold inline-flex items-center gap-1 bg-red-500/10 text-red-600 hover:bg-red-500/20">
+                  <span class="material-symbols-rounded text-[17px]">delete</span>
+                  Elimina
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('modal-detail').classList.remove('hidden');
+    }
+
+    async function exportIngredientsToGoogleKeep(id) {
+      const r = recipes.find(item => item.id === id);
+      if (!r) return;
+
+      const title = `Spesa: ${r.title}`;
+      const listText = (r.ingredients || []).map(ing => `☐ ${ing}`).join('\n');
+      const fullPayload = `${title}\n\n${listText}`;
+
+      copyTextFallback(fullPayload);
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: title,
+            text: listText
+          });
+          showToast('Lista spesa condivisa!', 'checklist');
+          return;
+        } catch (err) {
+          if (err && err.name === 'AbortError') return;
+        }
+      }
+
+      window.open('https://keep.google.com/', '_blank', 'noopener');
+      showToast('Ingredienti copiati! Incolla nella nuova nota Google Keep', 'content_copy');
+    }
+
+    function copyTextFallback(text) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch (e) {}
+    }
+
+    async function exportRecipeToPDF(id, shareMode = false) {
+      const r = recipes.find(item => item.id === id);
+      if (!r || !window.jspdf) {
+        showToast('Libreria PDF non disponibile', 'error');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 16;
+      const contentWidth = pageWidth - margin * 2;
+
+      const primaryHex = getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-primary').trim() || '#9C4234';
+      const rgb = hexToRgb(primaryHex) || { r: 156, g: 66, b: 52 };
+
+      // Header Banner
+      doc.setFillColor(rgb.r, rgb.g, rgb.b);
+      doc.rect(0, 0, pageWidth, 28, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('RICETTARIO 2.0 • ARCHIVIO DI FAMIGLIA', margin, 11);
+      doc.setFontSize(16);
+      const titleLines = doc.splitTextToSize(r.title, contentWidth);
+      doc.text(titleLines[0], margin, 21);
+
+      let y = 37;
+      doc.setTextColor(40, 40, 40);
+
+      if (titleLines.length > 1) {
+        doc.setFontSize(14);
+        doc.text(titleLines.slice(1), margin, y);
+        y += (titleLines.length - 1) * 7 + 3;
+      }
+
+      // Meta pill line
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(rgb.r, rgb.g, rgb.b);
+      const originLabel = r.origin === 'tramandata' ? (r.inheritedFrom ? `Tramandata da ${r.inheritedFrom}` : 'Tramandata') : (r.origin === 'prova' ? 'Prova Tecnica' : 'Personale');
+      doc.text(`${r.category.toUpperCase()}  |  ${originLabel}  |  Tempo: ${formatDuration(r.totalTime)}  |  Difficoltà: ${r.difficulty}  |  Porzioni: ${r.servings || 4}`, margin, y);
+      y += 7;
+
+      if (r.description) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(10);
+        doc.setTextColor(90, 90, 90);
+        const descLines = doc.splitTextToSize(r.description, contentWidth);
+        doc.text(descLines, margin, y);
+        y += descLines.length * 5 + 5;
+      }
+
+      // Ingredients
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(rgb.r, rgb.g, rgb.b);
+      doc.text('INGREDIENTI', margin, y);
+      y += 6;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(35, 35, 35);
+      (r.ingredients || []).forEach(ing => {
+        const lines = doc.splitTextToSize(`• ${ing}`, contentWidth - 4);
+        if (y + lines.length * 5 > pageHeight - 18) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(lines, margin + 2, y);
+        y += lines.length * 5 + 1.5;
+      });
+
+      y += 5;
+      if (y > pageHeight - 30) {
+        doc.addPage();
+        y = 20;
+      }
+
+      // Steps
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(rgb.r, rgb.g, rgb.b);
+      doc.text('PROCEDIMENTO', margin, y);
+      y += 6;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(35, 35, 35);
+      (r.steps || []).forEach((st, idx) => {
+        const lines = doc.splitTextToSize(`${idx + 1}. ${st}`, contentWidth - 2);
+        if (y + lines.length * 5.2 > pageHeight - 18) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(lines, margin, y);
+        y += lines.length * 5.2 + 3;
+      });
+
+      if (r.notes) {
+        y += 4;
+        const noteLines = doc.splitTextToSize(`Note: ${r.notes}`, contentWidth - 6);
+        if (y + noteLines.length * 5 > pageHeight - 18) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(9.5);
+        doc.setTextColor(85, 85, 85);
+        doc.text(noteLines, margin + 2, y);
+      }
+
+      const safeFilename = `${r.title.toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'ricetta'}.pdf`;
+
+      if (shareMode && navigator.canShare) {
+        try {
+          const blob = doc.output('blob');
+          const file = new File([blob], safeFilename, { type: 'application/pdf' });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: r.title,
+              text: `Ricetta: ${r.title}`,
+              files: [file]
+            });
+            showToast('PDF condiviso!', 'share');
+            return;
+          }
+        } catch (err) {
+          if (err && err.name === 'AbortError') return;
+        }
+      }
+
+      doc.save(safeFilename);
+      showToast('PDF della ricetta scaricato!', 'picture_as_pdf');
+    }
+
+    function deleteRecipe(id) {
+      recipes = recipes.filter(r => r.id !== id);
+      saveRecipes();
+      closeModal('modal-detail');
+      applyFilters();
+      renderHomeFeatured();
+      showToast('Ricetta eliminata dall’archivio', 'delete');
+    }
+
+    // ========================================================================
+    // WIZARD: DISH FINDER (3 STEPS -> PROPOSALS)
+    // ========================================================================
+    function openWizardModal() {
+      wizardState = { step: 1, category: '', occasion: '', difficulty: '' };
+      renderWizardStep();
+      document.getElementById('modal-wizard').classList.remove('hidden');
+    }
+
+    function renderWizardStep() {
+      const body = document.getElementById('wizard-body');
+      const sub = document.getElementById('wizard-step-subtitle');
+      if (!body || !sub) return;
+
+      if (wizardState.step === 1) {
+        sub.textContent = 'Passaggio 1 di 3 • Che portata desideri?';
+        const mainCourses = [
+          { id: 'Antipasti', label: 'Antipasto', icon: 'tapas', desc: 'Sfizi per iniziare' },
+          { id: 'Primi', label: 'Primo', icon: 'ramen_dining', desc: 'Pasta, risotti, zuppe' },
+          { id: 'Secondi', label: 'Secondo', icon: 'kebab_dining', desc: 'Carne, pesce, piatti unici' },
+          { id: 'Dolci', label: 'Dolce', icon: 'cake', desc: 'Torte, dessert, biscotti' }
+        ];
+        body.innerHTML = `
+          <div class="grid grid-cols-2 gap-3">
+            ${mainCourses.map(c => `
+              <button type="button" onclick="selectWizardCourse('${c.id}')"
+                      class="p-4 rounded-2xl border text-left transition-all hover:scale-[1.02] space-y-2"
+                      style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
+                <span class="material-symbols-rounded filled text-[28px]" style="color: var(--md-sys-color-primary);">${c.icon}</span>
+                <div>
+                  <p class="font-extrabold text-sm">${c.label}</p>
+                  <p class="text-[11px]" style="color: var(--md-sys-color-on-surface-variant);">${c.desc}</p>
+                </div>
+              </button>
+            `).join('')}
+          </div>
+        `;
+      } else if (wizardState.step === 2) {
+        sub.textContent = 'Passaggio 2 di 3 • Qual è l’occasione?';
+        const occIcons = {
+          'In famiglia': 'family_restroom',
+          'Compleanno': 'celebration',
+          'Festività': 'auto_awesome',
+          'Appuntamento': 'favorite'
+        };
+        body.innerHTML = `
+          <div class="grid grid-cols-2 gap-3">
+            ${OCCASIONS.map(occ => `
+              <button type="button" onclick="selectWizardOccasion('${occ}')"
+                      class="p-4 rounded-2xl border text-left transition-all hover:scale-[1.02] space-y-2"
+                      style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
+                <span class="material-symbols-rounded filled text-[26px]" style="color: var(--md-sys-color-tertiary);">${occIcons[occ] || 'event'}</span>
+                <p class="font-extrabold text-sm">${occ}</p>
+              </button>
+            `).join('')}
+          </div>
+          <button type="button" onclick="wizardState.step=1; renderWizardStep();" class="text-xs font-bold underline">
+            ← Torna alla portata
+          </button>
+        `;
+      } else if (wizardState.step === 3) {
+        sub.textContent = 'Passaggio 3 di 3 • Grado di difficoltà?';
+        body.innerHTML = `
+          <div class="grid grid-cols-3 gap-2.5">
+            ${DIFFICULTIES.map(diff => `
+              <button type="button" onclick="selectWizardDifficulty('${diff}')"
+                      class="p-4 rounded-2xl border text-center transition-all hover:scale-[1.02] space-y-1.5"
+                      style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
+                <span class="material-symbols-rounded text-[26px]" style="color: var(--md-sys-color-primary);">signal_cellular_alt</span>
+                <p class="font-extrabold text-sm">${diff}</p>
+              </button>
+            `).join('')}
+          </div>
+          <button type="button" onclick="wizardState.step=2; renderWizardStep();" class="text-xs font-bold underline">
+            ← Torna all’occasione
+          </button>
+        `;
+      } else {
+        sub.textContent = `${wizardState.category} • ${wizardState.occasion} • Difficoltà ${wizardState.difficulty}`;
+        const matches = recipes.filter(r => {
+          const catMatch = wizardState.category === 'Dolci'
+            ? ['Dolci', 'Biscotti', 'Lievitati'].includes(r.category)
+            : r.category === wizardState.category;
+          const occMatch = (r.occasions || []).includes(wizardState.occasion);
+          const diffMatch = r.difficulty === wizardState.difficulty;
+          return catMatch && occMatch && diffMatch;
+        });
+
+        const fallbackMatches = matches.length > 0 ? matches : recipes.filter(r =>
+          wizardState.category === 'Dolci'
+            ? ['Dolci', 'Biscotti', 'Lievitati'].includes(r.category)
+            : r.category === wizardState.category
+        );
+
+        body.innerHTML = `
+          <div class="space-y-3">
+            <p class="text-xs font-bold" style="color: var(--md-sys-color-primary);">
+              ${matches.length > 0
+                ? `Ecco ${matches.length} ${matches.length === 1 ? 'proposta perfetta' : 'proposte perfette'} per te:`
+                : 'Nessuna corrispondenza esatta su tutti e 3 i filtri, ecco le migliori proposte per questa portata:'}
+            </p>
+            <div class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+              ${fallbackMatches.length > 0 ? fallbackMatches.map(r => `
+                <button type="button" onclick="closeModal('modal-wizard'); openRecipeDetail('${r.id}')"
+                        class="w-full p-3.5 rounded-2xl border text-left flex items-center justify-between gap-3 hover:opacity-90"
+                        style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
+                  <div>
+                    <p class="font-extrabold text-sm">${escapeHtml(r.title)}</p>
+                    <p class="text-[11px] mt-0.5" style="color: var(--md-sys-color-on-surface-variant);">
+                      ${escapeHtml(r.category)} • ${formatDuration(r.totalTime)} • Difficoltà ${escapeHtml(r.difficulty)}
+                    </p>
+                  </div>
+                  <span class="material-symbols-rounded text-[20px]" style="color: var(--md-sys-color-primary);">arrow_forward</span>
+                </button>
+              `).join('') : `<p class="text-xs">Nessun piatto presente in questa categoria.</p>`}
+            </div>
+            <div class="pt-2 flex justify-between">
+              <button type="button" onclick="openWizardModal()" class="m3-btn-tonal px-4 py-2 text-xs font-bold">
+                Ricomincia Wizard
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function selectWizardCourse(cat) {
+      wizardState.category = cat;
+      wizardState.step = 2;
+      renderWizardStep();
+    }
+
+    function selectWizardOccasion(occ) {
+      wizardState.occasion = occ;
+      wizardState.step = 3;
+      renderWizardStep();
+    }
+
+    function selectWizardDifficulty(diff) {
+      wizardState.difficulty = diff;
+      wizardState.step = 4;
+      renderWizardStep();
+    }
+
+    // ========================================================================
+    // ADD / EDIT RECIPE WIZARD + AI PDF / DRAG-AND-DROP TEXT IMPORTER
+    // ========================================================================
+    function openAddModal(initialMode = 'manual') {
+      addState = {
+        mode: initialMode,
+        step: 1,
+        editId: null,
+        title: '',
+        description: '',
+        category: 'Primi',
+        totalTime: 45,
+        servings: 4,
+        difficulty: 'Basso',
+        occasions: ['In famiglia'],
+        origin: 'personale',
+        inheritedFrom: '',
+        notes: '',
+        image: '',
+        ingredients: [''],
+        steps: [''],
+        pdfStatus: '',
+        pdfSourceLabel: '',
+        rawPdfPreview: ''
+      };
+      document.getElementById('add-modal-title').textContent = 'Nuova Ricetta';
+      document.getElementById('add-mode-switcher').classList.remove('hidden');
+      switchAddMode(initialMode);
+      document.getElementById('modal-add').classList.remove('hidden');
+    }
+
+    function openEditRecipe(id) {
+      const r = recipes.find(item => item.id === id);
+      if (!r) return;
+      closeModal('modal-detail');
+
+      addState = {
+        mode: 'manual',
+        step: 1,
+        editId: r.id,
+        title: r.title || '',
+        description: r.description || '',
+        category: r.category || 'Primi',
+        totalTime: r.totalTime || 45,
+        servings: r.servings || 4,
+        difficulty: r.difficulty || 'Basso',
+        occasions: [...(r.occasions || ['In famiglia'])],
+        origin: r.origin || 'personale',
+        inheritedFrom: r.inheritedFrom || '',
+        notes: r.notes || '',
+        image: r.image || '',
+        ingredients: (r.ingredients && r.ingredients.length) ? [...r.ingredients] : [''],
+        steps: (r.steps && r.steps.length) ? [...r.steps] : [''],
+        pdfStatus: '',
+        pdfSourceLabel: '',
+        rawPdfPreview: ''
+      };
+      document.getElementById('add-modal-title').textContent = 'Modifica Ricetta';
+      document.getElementById('add-mode-switcher').classList.add('hidden');
+      renderAddModal();
+      document.getElementById('modal-add').classList.remove('hidden');
+    }
+
+    function switchAddMode(mode) {
+      addState.mode = mode;
+      const manBtn = document.getElementById('mode-manual-btn');
+      const pdfBtn = document.getElementById('mode-pdf-btn');
+      if (manBtn && pdfBtn) {
+        if (mode === 'manual') {
+          manBtn.style.backgroundColor = 'var(--md-sys-color-primary)';
+          manBtn.style.color = 'var(--md-sys-color-on-primary)';
+          pdfBtn.style.backgroundColor = 'transparent';
+          pdfBtn.style.color = 'var(--md-sys-color-on-surface-variant)';
+        } else {
+          pdfBtn.style.backgroundColor = 'var(--md-sys-color-primary)';
+          pdfBtn.style.color = 'var(--md-sys-color-on-primary)';
+          manBtn.style.backgroundColor = 'transparent';
+          manBtn.style.color = 'var(--md-sys-color-on-surface-variant)';
+        }
+      }
+      renderAddModal();
+    }
+
+    function renderAddModal() {
+      const body = document.getElementById('add-modal-body');
+      const footer = document.getElementById('add-modal-footer');
+      const sub = document.getElementById('add-modal-subtitle');
+      const stepper = document.getElementById('add-stepper-bar');
+      if (!body || !footer || !sub || !stepper) return;
+
+      if (addState.mode === 'pdf') {
+        stepper.classList.add('hidden');
+        sub.textContent = 'Carica un PDF o incolla / trascina il testo della ricetta';
+        body.innerHTML = `
+          <div class="space-y-4">
+            <!-- PDF Upload Dropzone -->
+            <label ondragover="event.preventDefault()" ondrop="handlePdfDrop(event)"
+                   class="block p-5 rounded-3xl border-2 border-dashed text-center cursor-pointer transition-colors hover:opacity-90 space-y-2"
+                   style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-primary);">
+              <span class="material-symbols-rounded text-[36px]" style="color: var(--md-sys-color-primary);">upload_file</span>
+              <p class="font-extrabold text-sm">Trascina qui il file PDF oppure clicca per sceglierlo</p>
+              <p class="text-xs" style="color: var(--md-sys-color-on-surface-variant);">
+                L’assistente IA riconoscerà ingredienti, dosi, passaggi e foto prima della scelta dei Tag
+              </p>
+              <input type="file" accept="application/pdf,.pdf" onchange="handlePdfFileImport(event)" class="hidden" />
+            </label>
+
+            <!-- Drag & Drop / Paste Text Area -->
+            <div class="p-4 rounded-2xl border space-y-2.5"
+                 style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
+              <label class="text-xs font-bold flex items-center gap-1.5" style="color: var(--md-sys-color-on-surface);">
+                <span class="material-symbols-rounded text-[18px]" style="color: var(--md-sys-color-primary);">content_paste</span>
+                Oppure incolla / trascina qui il testo copiato di una ricetta:
+              </label>
+              <textarea id="pasted-recipe-text" rows="5"
+                        ondragover="event.preventDefault()"
+                        ondrop="handleTextDrop(event)"
+                        placeholder="Incolla qui il testo della ricetta (titolo, ingredienti, procedimento) oppure trascina un blocco di testo..."
+                        class="w-full p-3 rounded-2xl border text-xs leading-relaxed focus:outline-none"
+                        style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);"></textarea>
+              <div class="flex justify-end">
+                <button type="button" onclick="handlePastedRecipeImport()"
+                        class="m3-btn-primary px-4 py-2 text-xs font-bold inline-flex items-center gap-1.5">
+                  <span class="material-symbols-rounded text-[17px]">auto_awesome</span>
+                  Analizza Testo con IA
+                </button>
+              </div>
+            </div>
+
+            <p id="pdf-status-text" class="text-xs font-semibold text-center" style="color: var(--md-sys-color-primary);">
+              ${addState.pdfStatus || ''}
+            </p>
+
+            <div class="text-center">
+              <button type="button" onclick="closeModal('modal-add'); openBackupModal();"
+                      class="text-[11px] underline hover:opacity-80"
+                      style="color: var(--md-sys-color-on-surface-variant);">
+                ${hasAnyConfiguredAIKey() ? 'Chiavi IA (Gemini / Groq) configurate — clicca per verificare o modificare →' : 'Configura qui le chiavi IA gratuite (Gemini / Groq) →'}
+              </button>
+            </div>
+          </div>
+        `;
+        footer.innerHTML = `
+          <button type="button" onclick="closeModal('modal-add')" class="m3-btn-tonal px-4 py-2 text-xs font-bold">
+            Annulla
+          </button>
+          <span class="text-[11px]" style="color: var(--md-sys-color-on-surface-variant);">Step successivi: revisione e Tag</span>
+        `;
+        return;
+      }
+
+      stepper.classList.remove('hidden');
+      document.querySelectorAll('.add-step-pill').forEach((pill, i) => {
+        pill.style.backgroundColor = (i + 1) <= addState.step
+          ? 'var(--md-sys-color-primary)'
+          : 'var(--md-sys-color-surface-container-highest)';
+      });
+
+      if (addState.step === 1) {
+        sub.textContent = 'Step 1 di 4 • Nome ricetta, descrizione e foto';
+        body.innerHTML = `
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold mb-1">Nome della ricetta *</label>
+              <input id="inp-title" type="text" value="${escapeAttr(addState.title)}"
+                     oninput="addState.title = this.value"
+                     placeholder="Es. Pasta alla Norma della Nonna"
+                     class="w-full px-4 py-2.5 rounded-2xl border text-sm font-semibold focus:outline-none"
+                     style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold mb-1">Breve descrizione</label>
+              <textarea id="inp-desc" rows="2" oninput="addState.description = this.value"
+                        placeholder="Una nota introduttiva sul piatto..."
+                        class="w-full px-4 py-2.5 rounded-2xl border text-xs focus:outline-none"
+                        style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">${escapeHtml(addState.description)}</textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold mb-1">Tempo totale (minuti)</label>
+                <input type="number" min="1" value="${addState.totalTime}"
+                       oninput="addState.totalTime = parseInt(this.value, 10) || 30"
+                       class="w-full px-4 py-2 rounded-2xl border text-sm font-semibold focus:outline-none"
+                       style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold mb-1">Porzioni</label>
+                <input type="number" min="1" value="${addState.servings}"
+                       oninput="addState.servings = parseInt(this.value, 10) || 4"
+                       class="w-full px-4 py-2 rounded-2xl border text-sm font-semibold focus:outline-none"
+                       style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold mb-1">Foto del piatto (opzionale)</label>
+              <div class="flex items-center gap-3">
+                <label class="m3-btn-tonal px-4 py-2 rounded-full text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer">
+                  <span class="material-symbols-rounded text-[18px]">add_a_photo</span>
+                  Carica foto
+                  <input type="file" accept="image/*" onchange="handleRecipeImageUpload(event)" class="hidden" />
+                </label>
+                ${addState.image ? `
+                  <img src="${addState.image}" alt="Anteprima" class="w-12 h-12 rounded-xl object-cover border" />
+                  <button type="button" onclick="addState.image=''; renderAddModal();" class="text-xs text-red-600 font-bold">Rimuovi</button>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (addState.step === 2) {
+        sub.textContent = 'Step 2 di 4 • Lista ingredienti e dosi';
+        body.innerHTML = `
+          <div class="space-y-3">
+            ${addState.pdfSourceLabel ? `
+              <div class="p-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between gap-2"
+                   style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+                <span>${escapeHtml(addState.pdfSourceLabel)}</span>
+                ${addState.rawPdfPreview ? `
+                  <button type="button" onclick="document.getElementById('raw-pdf-box').classList.toggle('hidden')" class="underline text-[11px] shrink-0">
+                    Testo grezzo
+                  </button>
+                ` : ''}
+              </div>
+              <pre id="raw-pdf-box" class="hidden p-3 rounded-xl text-[10px] max-h-32 overflow-y-auto border whitespace-pre-wrap"
+                   style="background-color: var(--md-sys-color-surface-container); border-color: var(--md-sys-color-outline-variant);">${escapeHtml(addState.rawPdfPreview)}</pre>
+            ` : ''}
+
+            <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
+              ${addState.ingredients.map((ing, idx) => `
+                <div class="flex items-center gap-2">
+                  <input type="text" value="${escapeAttr(ing)}"
+                         oninput="addState.ingredients[${idx}] = this.value"
+                         placeholder="Es. 320 g di rigatoni"
+                         class="flex-1 px-3.5 py-2 rounded-xl border text-xs sm:text-sm focus:outline-none"
+                         style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);" />
+                  <button type="button" onclick="removeIngredientRow(${idx})"
+                          class="w-8 h-8 rounded-full flex items-center justify-center text-red-600 hover:bg-red-500/10">
+                    <span class="material-symbols-rounded text-[18px]">remove_circle</span>
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+
+            <button type="button" onclick="addIngredientRow()"
+                    class="m3-btn-tonal px-4 py-2 text-xs font-bold inline-flex items-center gap-1.5">
+              <span class="material-symbols-rounded text-[18px]">add</span>
+              Aggiungi ingrediente
+            </button>
+          </div>
+        `;
+      } else if (addState.step === 3) {
+        sub.textContent = 'Step 3 di 4 • Procedimento passo dopo passo';
+        body.innerHTML = `
+          <div class="space-y-3">
+            <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+              ${addState.steps.map((st, idx) => `
+                <div class="flex items-start gap-2">
+                  <span class="w-6 h-6 mt-1.5 rounded-full shrink-0 flex items-center justify-center text-xs font-extrabold"
+                        style="background-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">
+                    ${idx + 1}
+                  </span>
+                  <textarea rows="2" oninput="addState.steps[${idx}] = this.value"
+                            placeholder="Descrivi il passaggio ${idx + 1}..."
+                            class="flex-1 px-3.5 py-2 rounded-xl border text-xs sm:text-sm focus:outline-none"
+                            style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">${escapeHtml(st)}</textarea>
+                  <button type="button" onclick="removeStepRow(${idx})"
+                          class="w-8 h-8 mt-1 rounded-full flex items-center justify-center text-red-600 hover:bg-red-500/10">
+                    <span class="material-symbols-rounded text-[18px]">remove_circle</span>
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+
+            <button type="button" onclick="addStepRow()"
+                    class="m3-btn-tonal px-4 py-2 text-xs font-bold inline-flex items-center gap-1.5">
+              <span class="material-symbols-rounded text-[18px]">add</span>
+              Aggiungi passaggio
+            </button>
+          </div>
+        `;
+      } else {
+        sub.textContent = 'Step 4 di 4 • Tag, Categoria e Origine';
+        const catsOnly = CATEGORIES.filter(c => c.id !== 'all');
+        body.innerHTML = `
+          <div class="space-y-4">
+            <!-- Origin -->
+            <div>
+              <label class="block text-xs font-bold mb-1.5">Tipo di raccolta *</label>
+              <div class="grid grid-cols-3 gap-2">
+                ${[
+                  { id: 'personale', label: 'Personale' },
+                  { id: 'tramandata', label: 'Tramandata' },
+                  { id: 'prova', label: 'Prova Tecnica' }
+                ].map(o => `
+                  <button type="button" onclick="addState.origin='${o.id}'; renderAddModal();"
+                          class="py-2 px-3 rounded-2xl border text-xs font-bold transition-all"
+                          style="background-color: ${addState.origin === o.id ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-surface-container-low)'};
+                                 color: ${addState.origin === o.id ? 'var(--md-sys-color-on-primary)' : 'var(--md-sys-color-on-surface)'};
+                                 border-color: var(--md-sys-color-outline-variant);">
+                    ${o.label}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            ${addState.origin === 'tramandata' ? `
+              <div>
+                <label class="block text-xs font-bold mb-1">Tramandata da (es. Nonna Rosa, Mamma...)</label>
+                <input type="text" value="${escapeAttr(addState.inheritedFrom)}"
+                       oninput="addState.inheritedFrom = this.value"
+                       placeholder="Nome del parente"
+                       class="w-full px-3.5 py-2 rounded-2xl border text-xs font-semibold focus:outline-none"
+                       style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);" />
+              </div>
+            ` : ''}
+
+            <!-- Category -->
+            <div>
+              <label class="block text-xs font-bold mb-1.5">Categoria *</label>
+              <div class="flex flex-wrap gap-1.5">
+                ${catsOnly.map(c => `
+                  <button type="button" onclick="addState.category='${c.id}'; renderAddModal();"
+                          class="m3-chip ${addState.category === c.id ? 'active' : ''} px-3 py-1.5 text-xs font-semibold">
+                    ${c.label}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div>
+              <label class="block text-xs font-bold mb-1.5">Difficoltà *</label>
+              <div class="grid grid-cols-3 gap-2">
+                ${DIFFICULTIES.map(d => `
+                  <button type="button" onclick="addState.difficulty='${d}'; renderAddModal();"
+                          class="m3-chip ${addState.difficulty === d ? 'active' : ''} py-1.5 px-3 text-xs font-semibold">
+                    ${d}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Occasions (Multi-select) -->
+            <div>
+              <label class="block text-xs font-bold mb-1.5">Occasioni ideali (per il Wizard)</label>
+              <div class="flex flex-wrap gap-1.5">
+                ${OCCASIONS.map(occ => {
+                  const active = addState.occasions.includes(occ);
+                  return `
+                    <button type="button" onclick="toggleAddOccasion('${occ}')"
+                            class="m3-chip ${active ? 'active' : ''} px-3 py-1.5 text-xs font-semibold">
+                      ${occ}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold mb-1">Segreti & Note (opzionale)</label>
+              <textarea rows="2" oninput="addState.notes = this.value"
+                        placeholder="Consigli sulla cottura o conservazione..."
+                        class="w-full px-3.5 py-2 rounded-2xl border text-xs focus:outline-none"
+                        style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">${escapeHtml(addState.notes)}</textarea>
+            </div>
+          </div>
+        `;
+      }
+
+      footer.innerHTML = `
+        <div>
+          ${addState.step > 1 ? `
+            <button type="button" onclick="addState.step--; renderAddModal();"
+                    class="m3-btn-tonal px-4 py-2 text-xs font-bold">
+              ← Indietro
+            </button>
+          ` : `
+            <button type="button" onclick="closeModal('modal-add')"
+                    class="m3-btn-tonal px-4 py-2 text-xs font-bold">
+              Annulla
+            </button>
+          `}
+        </div>
+        <div>
+          ${addState.step < 4 ? `
+            <button type="button" onclick="nextAddStep()"
+                    class="m3-btn-primary px-5 py-2 text-xs font-bold">
+              Avanti →
+            </button>
+          ` : `
+            <button type="button" onclick="saveNewOrEditedRecipe()"
+                    class="m3-btn-primary px-5 py-2.5 text-xs font-bold inline-flex items-center gap-1.5">
+              <span class="material-symbols-rounded text-[18px]">check</span>
+              Salva Ricetta
+            </button>
+          `}
+        </div>
+      `;
+    }
+
+    function nextAddStep() {
+      if (addState.step === 1 && !addState.title.trim()) {
+        showToast('Inserisci il nome della ricetta', 'info');
+        return;
+      }
+      addState.step++;
+      renderAddModal();
+    }
+
+    function addIngredientRow() {
+      addState.ingredients.push('');
+      renderAddModal();
+    }
+
+    function removeIngredientRow(idx) {
+      if (addState.ingredients.length <= 1) {
+        addState.ingredients[0] = '';
+      } else {
+        addState.ingredients.splice(idx, 1);
+      }
+      renderAddModal();
+    }
+
+    function addStepRow() {
+      addState.steps.push('');
+      renderAddModal();
+    }
+
+    function removeStepRow(idx) {
+      if (addState.steps.length <= 1) {
+        addState.steps[0] = '';
+      } else {
+        addState.steps.splice(idx, 1);
+      }
+      renderAddModal();
+    }
+
+    function toggleAddOccasion(occ) {
+      if (addState.occasions.includes(occ)) {
+        addState.occasions = addState.occasions.filter(o => o !== occ);
+      } else {
+        addState.occasions.push(occ);
+      }
+      renderAddModal();
+    }
+
+    function handleRecipeImageUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxW = 900;
+          const scale = Math.min(1, maxW / img.width);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          addState.image = canvas.toDataURL('image/jpeg', 0.8);
+          renderAddModal();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveNewOrEditedRecipe() {
+      const cleanIngredients = addState.ingredients.map(s => s.trim()).filter(Boolean);
+      const cleanSteps = addState.steps.map(s => s.trim()).filter(Boolean);
+
+      if (!addState.title.trim()) {
+        showToast('Inserisci il titolo della ricetta', 'info');
+        return;
+      }
+
+      const recipeObj = {
+        id: addState.editId || `rec-${Date.now()}`,
+        title: addState.title.trim(),
+        description: addState.description.trim(),
+        category: addState.category,
+        totalTime: Number(addState.totalTime) || 30,
+        servings: Number(addState.servings) || 4,
+        difficulty: addState.difficulty,
+        occasions: addState.occasions.length ? addState.occasions : ['In famiglia'],
+        origin: addState.origin,
+        inheritedFrom: addState.origin === 'tramandata' ? addState.inheritedFrom.trim() : '',
+        notes: addState.notes.trim(),
+        image: addState.image || '',
+        ingredients: cleanIngredients.length ? cleanIngredients : ['Ingredienti da completare'],
+        steps: cleanSteps.length ? cleanSteps : ['Procedimento da completare']
+      };
+
+      if (addState.editId) {
+        const idx = recipes.findIndex(r => r.id === addState.editId);
+        if (idx !== -1) recipes[idx] = recipeObj;
+      } else {
+        recipes.unshift(recipeObj);
+      }
+
+      saveRecipes();
+      closeModal('modal-add');
+      renderHomeFeatured();
+      applyFilters();
+      showToast(addState.editId ? 'Ricetta aggiornata!' : 'Nuova ricetta salvata!', 'check_circle');
+    }
+
+    // ========================================================================
+    // PDF & PASTED TEXT AI RECIPE RECOGNITION
+    // ========================================================================
+    function handlePdfDrop(event) {
+      event.preventDefault();
+      const file = event.dataTransfer?.files?.[0];
+      if (file && file.type === 'application/pdf') {
+        processPdfFile(file);
+      } else {
+        const droppedText = event.dataTransfer?.getData('text/plain');
+        if (droppedText) {
+          const ta = document.getElementById('pasted-recipe-text');
+          if (ta) ta.value = droppedText;
+          handlePastedRecipeImport();
+        }
+      }
+    }
+
+    function handleTextDrop(event) {
+      event.preventDefault();
+      const droppedText = event.dataTransfer?.getData('text/plain');
+      if (droppedText) {
+        const ta = document.getElementById('pasted-recipe-text');
+        if (ta) ta.value = droppedText;
+      }
+    }
+
+    function handlePdfFileImport(event) {
+      const file = event.target.files?.[0];
+      if (file) processPdfFile(file);
+      event.target.value = '';
+    }
+
+    async function handlePastedRecipeImport() {
+      const rawText = (document.getElementById('pasted-recipe-text')?.value || '').trim();
+      if (!rawText) {
+        showToast('Incolla o trascina prima il testo della ricetta', 'info');
+        return;
+      }
+      addState.pdfStatus = 'Analisi intelligente del testo in corso con Gemini...';
+      renderAddModal();
+      await runRecipeExtractionPipeline(rawText, [], '');
+    }
+
+    async function processPdfFile(file) {
+      if (!window.pdfjsLib) {
+        showToast('Libreria PDF.js non caricata', 'error');
+        return;
+      }
+
+      addState.pdfStatus = 'Lettura pagine PDF e ricostruzione colonne in corso...';
+      renderAddModal();
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const maxPages = Math.min(pdf.numPages, 3);
+        let fullTextLines = [];
+        const pageImagesBase64 = [];
+        let coverPreview = '';
+
+        for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const lines = reconstructPageLinesLayoutAware(textContent.items);
+          fullTextLines.push(...lines);
+
+          const viewport = page.getViewport({ scale: 1.1 });
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext('2d');
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+          if (pageNum === 1) coverPreview = dataUrl;
+          if (pageNum <= 2) pageImagesBase64.push(dataUrl.split(',')[1]);
+        }
+
+        const rawText = fullTextLines.join('\n');
+        // Send images ONLY if the PDF is scanned / has very little selectable text, keeping text-PDF requests ultra-fast and lightweight!
+        const isScannedPdf = rawText.replace(/\s+/g, '').length < 60;
+
+        addState.pdfStatus = 'Analisi culinaria con Gemini in corso...';
+        renderAddModal();
+
+        await runRecipeExtractionPipeline(
+          rawText,
+          isScannedPdf ? pageImagesBase64 : [],
+          coverPreview,
+          file.name.replace(/\.pdf$/i, '')
+        );
+      } catch (err) {
+        addState.pdfStatus = 'Errore durante la lettura del file PDF.';
+        renderAddModal();
+        showToast('Impossibile leggere il PDF selezionato', 'error');
+      }
+    }
+
+    function reconstructPageLinesLayoutAware(items) {
+      if (!Array.isArray(items) || items.length === 0) return [];
+      const positioned = items
+        .map(it => ({
+          str: (it.str || '').trim(),
+          x: it.transform ? it.transform[4] : 0,
+          y: it.transform ? it.transform[5] : 0
+        }))
+        .filter(it => it.str.length > 0);
+
+      if (positioned.length === 0) return [];
+
+      // Group items by visual Y coordinate (10pt tolerance)
+      positioned.sort((a, b) => b.y - a.y || a.x - b.x);
+      const rows = [];
+      positioned.forEach(item => {
+        const existingRow = rows.find(r => Math.abs(r.y - item.y) <= 10);
+        if (existingRow) {
+          existingRow.items.push(item);
+        } else {
+          rows.push({ y: item.y, items: [item] });
+        }
+      });
+
+      return rows.map(row => {
+        row.items.sort((a, b) => a.x - b.x);
+        return row.items.map(i => i.str).join(' ');
+      });
+    }
+
+    function extractCleanJsonFromAIResponse(raw) {
+      if (!raw) return null;
+      const cleaned = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+      const firstBrace = cleaned.indexOf('{');
+      const lastBrace = cleaned.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+      }
+      return JSON.parse(cleaned);
+    }
+
+    async function runRecipeExtractionPipeline(rawText, pageImagesBase64 = [], coverPreview = '', fallbackTitle = '') {
+      lastAiDiagnosticError = '';
+      let usedEngineName = '';
+      let parsed = await parseRecipeWithAI(rawText, pageImagesBase64);
+      if (parsed) {
+        usedEngineName = 'Gemini';
+      } else {
+        parsed = await parseRecipeWithGroq(rawText, pageImagesBase64);
+        if (parsed) usedEngineName = 'Groq Llama 3.3';
+      }
+      let usedAI = Boolean(parsed);
+
+      if (!parsed) {
+        parsed = fallbackParsePdfLines(rawText.split('\n'), fallbackTitle);
+      }
+
+      addState.title = parsed.title || fallbackTitle || 'Ricetta Importata';
+      addState.description = parsed.description || '';
+      addState.totalTime = Number(parsed.totalTime) || 45;
+      addState.servings = Number(parsed.servings) || 4;
+      addState.category = CATEGORIES.some(c => c.id === parsed.category && c.id !== 'all') ? parsed.category : 'Primi';
+      addState.difficulty = DIFFICULTIES.includes(parsed.difficulty) ? parsed.difficulty : 'Medio';
+      addState.occasions = (Array.isArray(parsed.occasions) && parsed.occasions.length)
+        ? parsed.occasions.filter(o => OCCASIONS.includes(o))
+        : ['In famiglia'];
+      if (addState.occasions.length === 0) addState.occasions = ['In famiglia'];
+      addState.notes = parsed.notes || '';
+      addState.ingredients = (Array.isArray(parsed.ingredients) && parsed.ingredients.length) ? parsed.ingredients : [''];
+      addState.steps = (Array.isArray(parsed.steps) && parsed.steps.length) ? parsed.steps : [''];
+      if (coverPreview && !addState.image) addState.image = coverPreview;
+
+      addState.rawPdfPreview = rawText;
+      addState.pdfSourceLabel = usedAI
+        ? `Estratto e ricostruito con IA (${usedEngineName}) — verifica ingredienti e passaggi`
+        : `Parser locale attivato (${lastAiDiagnosticError || 'chiavi API non attive o limite raggiunto'})`;
+
+      addState.mode = 'manual';
+      addState.step = 2;
+      renderAddModal();
+      showToast(usedAI ? `Ricetta ricostruita con ${usedEngineName}!` : 'Parser locale usato: controlla i campi', usedAI ? 'auto_awesome' : 'info');
+    }
+
+    function getCulinaryChefSystemPrompt() {
+      return `Sei uno chef executive italiano ed esperto archivista gastronomico.
+Il tuo compito è estrarre e ricostruire una ricetta perfetta da un testo grezzo e/o dalle pagine di un PDF.
+Rispondi SOLO con un oggetto JSON valido (senza testo aggiuntivo) con questa struttura esatta:
+{
+  "title": "Titolo del piatto",
+  "description": "Breve descrizione invitante",
+  "category": "Antipasti | Primi | Secondi | Sides | Dolci | Biscotti | Lievitati",
+  "totalTime": 45,
+  "servings": 4,
+  "difficulty": "Basso | Medio | Elevato",
+  "occasions": ["In famiglia"],
+  "ingredients": ["320 g di farina 00", "2 uova"],
+  "steps": ["Passaggio 1...", "Passaggio 2..."],
+  "notes": "Eventuali consigli"
+}
+
+Regole culinarie:
+1. PREVISIONE CULINARIA DAL NOME DEL PIATTO: individua subito il titolo del piatto e usa le tue competenze culinarie per prevedere gli ingredienti tipici, evitando refusi, omissioni o errori di lettura. Se qualche ingrediente o passaggio risulta tagliato, illeggibile o mancante, ricostruiscilo con precisione secondo la tradizione culinaria.
+2. SCANSIONE DEGLI INGREDIENTI: individua il paragrafo "Ingredienti" (o "Cosa serve", "Dosi", "Per l'impasto", ecc.). Gli ingredienti possono essere in lista singola o affiancati su più colonne. Ogni elemento di "ingredients" deve unire la quantità/peso/volume al rispettivo ingrediente (es. "320 g di farina 00", "Sale fino q.b."). Se una quantità era su una riga vicina, ricomponila.
+3. RICONOSCIMENTO INTELLIGENTE DEL PROCEDIMENTO E DEGLI STEP: il procedimento segue gli ingredienti. Se manca il titolo "Procedimento" o "Preparazione", individua l'inizio da espressioni come "innanzitutto", "come prima cosa", "partiamo", "prima di tutto", "inizia", "versa", "prepara". Se i passaggi non sono già numerati, dividili in step logici e cronologici rilevando connettivi sequenziali come "poi", "a questo punto", "quindi", "adesso", "successivamente", "infine". Ricostruisci eventuali passaggi spezzati in frasi italiane fluide.
+4. CLASSIFICAZIONE: "category" deve essere uno tra: "Antipasti", "Primi", "Secondi", "Sides", "Dolci", "Biscotti", "Lievitati". "difficulty" uno tra: "Basso", "Medio", "Elevato". "occasions" tra: "In famiglia", "Compleanno", "Festività", "Appuntamento".`;
+    }
+
+    async function parseRecipeWithAI(rawText, pageImagesBase64 = []) {
+      const apiKey = getPersonalGeminiKey();
+      const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-3-flash-preview'];
+      const systemPrompt = getCulinaryChefSystemPrompt();
+
+      const parts = [
+        {
+          text: `Analizza questa ricetta ed estrai il JSON strutturato:\n\n${rawText || '(Documento scansionato: leggi le immagini allegate)'}`
+        }
+      ];
+
+      (pageImagesBase64 || []).slice(0, 2).forEach(b64 => {
+        if (b64) {
+          parts.push({
+            inlineData: {
+              mimeType: 'image/jpeg',
+              data: b64
+            }
+          });
+        }
+      });
+
+      const payload = {
+        contents: [{ role: 'user', parts }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.2
+        }
+      };
+
+      for (const model of models) {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errJson = await response.json().catch(() => ({}));
+            const errMsg = errJson?.error?.message || `HTTP ${response.status}`;
+            if (response.status === 400 || response.status === 403) {
+              lastAiDiagnosticError = 'Chiave Gemini non valida o mancante';
+              return null;
+            }
+            if (response.status === 429) {
+              lastAiDiagnosticError = 'Quota gratuita Gemini temporaneamente esaurita';
+              continue;
+            }
+            lastAiDiagnosticError = errMsg;
+            continue;
+          }
+
+          const result = await response.json();
+          const textOut = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!textOut) continue;
+          const parsed = extractCleanJsonFromAIResponse(textOut);
+          if (parsed && Array.isArray(parsed.ingredients)) {
+            return parsed;
+          }
+        } catch (err) {
+          lastAiDiagnosticError = 'Rete non raggiungibile o blocco sicurezza del browser';
+        }
+      }
+      return null;
+    }
+
+    async function parseRecipeWithGroq(rawText, pageImagesBase64 = []) {
+      const groqKey = getPersonalGroqKey();
+      if (!groqKey) return null;
+
+      const systemPrompt = getCulinaryChefSystemPrompt();
+      const hasImages = Array.isArray(pageImagesBase64) && pageImagesBase64.length > 0;
+      const models = hasImages
+        ? ['meta-llama/llama-4-scout-17b-16e-instruct', 'llama-3.3-70b-versatile']
+        : ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b'];
+
+      for (const model of models) {
+        const isVisionModel = model.includes('llama-4');
+        const userContent = (isVisionModel && hasImages)
+          ? [
+              { type: 'text', text: `Analizza questa ricetta ed estrai il JSON strutturato:\n\n${rawText || '(Documento scansionato: leggi le immagini allegate)'}` },
+              ...pageImagesBase64.slice(0, 2).map(b64 => ({
+                type: 'image_url',
+                image_url: { url: `data:image/jpeg;base64,${b64}` }
+              }))
+            ]
+          : `Analizza questa ricetta ed estrai il JSON strutturato:\n\n${rawText}`;
+
+        try {
+          const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${groqKey}`
+            },
+            body: JSON.stringify({
+              model,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userContent }
+              ],
+              response_format: { type: 'json_object' },
+              temperature: 0.2
+            })
+          });
+
+          if (!response.ok) {
+            const errJson = await response.json().catch(() => ({}));
+            const errMsg = errJson?.error?.message || `Groq HTTP ${response.status}`;
+            lastAiDiagnosticError = errMsg;
+            continue;
+          }
+
+          const result = await response.json();
+          const textOut = result?.choices?.[0]?.message?.content;
+          if (!textOut) continue;
+          const parsed = extractCleanJsonFromAIResponse(textOut);
+          if (parsed && Array.isArray(parsed.ingredients)) {
+            return parsed;
+          }
+        } catch (err) {
+          lastAiDiagnosticError = 'Errore di rete verso Groq';
+        }
+      }
+      return null;
+    }
+
+    function fallbackParsePdfLines(lines, fallbackTitle = '') {
+      const cleanLines = lines.map(l => l.trim()).filter(Boolean);
+      const title = cleanLines[0] || fallbackTitle || 'Ricetta Importata';
+
+      const ingIdx = cleanLines.findIndex(l => /^(ingredienti|cosa serve|dosi)\b/i.test(l));
+      const procIdx = cleanLines.findIndex((l, idx) =>
+        idx > Math.max(0, ingIdx) &&
+        (/^(procedimento|preparazione|esecuzione|svolgimento)\b/i.test(l) ||
+         /^(innanzitutto|come prima cosa|partiamo|prima di tutto)\b/i.test(l))
+      );
+
+      let ingredients = [];
+      let procLines = [];
+
+      if (ingIdx !== -1 && procIdx !== -1 && procIdx > ingIdx) {
+        ingredients = cleanLines.slice(ingIdx + 1, procIdx);
+        procLines = cleanLines.slice(procIdx);
+      } else if (ingIdx !== -1) {
+        ingredients = cleanLines.slice(ingIdx + 1, ingIdx + 15);
+        procLines = cleanLines.slice(ingIdx + 15);
+      } else {
+        cleanLines.slice(1).forEach(line => {
+          if (/^(\d+|q\.b\.|un pizzico|mezzo|mezza)\b/i.test(line) && line.length < 75) {
+            ingredients.push(line);
+          } else {
+            procLines.push(line);
+          }
+        });
+      }
+
+      if (procLines.length && /^(procedimento|preparazione|esecuzione|svolgimento)\s*:?$/i.test(procLines[0])) {
+        procLines.shift();
+      }
+
+      const fullProc = procLines.join(' ');
+      const steps = fullProc
+        ? fullProc
+            .split(/(?<=[.!?])\s+(?=(?:Poi|A questo punto|Quindi|Adesso|Successivamente|Infine|\d+[.)]))/i)
+            .map(s => s.replace(/^\d+[.)]\s*/, '').trim())
+            .filter(Boolean)
+        : [];
+
+      return {
+        title,
+        description: '',
+        category: 'Primi',
+        totalTime: 45,
+        servings: 4,
+        difficulty: 'Medio',
+        occasions: ['In famiglia'],
+        ingredients: ingredients.length ? ingredients : ['Verifica gli ingredienti dal testo grezzo'],
+        steps: steps.length ? steps : ['Verifica il procedimento dal testo grezzo'],
+        notes: ''
+      };
+    }
+
+    // ========================================================================
+    // BACKUP & RESTORE (GOOGLE DRIVE JSON)
+    // ========================================================================
+    function openBackupModal() {
+      syncGeminiApiKeyUI();
+      document.getElementById('modal-backup').classList.remove('hidden');
+    }
+
+    async function exportBackupFile(shareMode = false) {
+      const payload = {
+        app: 'Ricettario 2.0',
+        exportedAt: new Date().toISOString(),
+        recipes
+      };
+      const jsonStr = JSON.stringify(payload, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const filename = `ricettario-2-0-backup-${new Date().toISOString().slice(0, 10)}.json`;
+
+      if (shareMode && navigator.canShare) {
+        try {
+          const file = new File([blob], filename, { type: 'application/json' });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: 'Backup Ricettario 2.0',
+              text: 'Backup completo del ricettario di famiglia',
+              files: [file]
+            });
+            showToast('Backup inviato!', 'cloud_done');
+            return;
+          }
+        } catch (err) {
+          if (err && err.name === 'AbortError') return;
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('File backup .json scaricato!', 'download');
+    }
+
+    function importBackupFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const mode = document.querySelector('input[name="restore-mode"]:checked')?.value || 'merge';
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const importedList = Array.isArray(parsed) ? parsed : parsed.recipes;
+          if (!Array.isArray(importedList)) {
+            showToast('Formato backup non riconosciuto', 'error');
+            return;
+          }
+
+          if (mode === 'replace') {
+            recipes = importedList;
+          } else {
+            const existingIds = new Set(recipes.map(r => r.id));
+            importedList.forEach(item => {
+              if (!existingIds.has(item.id)) {
+                recipes.push(item);
+              }
+            });
+          }
+
+          saveRecipes();
+          renderHomeFeatured();
+          applyFilters();
+          closeModal('modal-backup');
+          showToast(`Ripristinate ${importedList.length} ricette!`, 'cloud_done');
+        } catch (err) {
+          showToast('Errore nella lettura del file backup', 'error');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    // ========================================================================
+    // UTILITIES
+    // ========================================================================
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+
+    function formatDuration(mins) {
+      const m = Number(mins) || 0;
+      if (m < 60) return `${m} min`;
+      const h = Math.floor(m / 60);
+      const rem = m % 60;
+      return rem ? `${h}h ${rem}m` : `${h} ${h === 1 ? 'ora' : 'ore'}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str);
+    }
+
+    function hexToRgb(hex) {
+      const clean = hex.replace('#', '');
+      if (clean.length !== 6) return null;
+      const num = parseInt(clean, 16);
+      return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+      };
+    }
+
+    let toastTimer = null;
+    function showToast(msg, icon = 'check_circle') {
+      const toast = document.getElementById('toast');
+      const msgEl = document.getElementById('toast-msg');
+      const iconEl = document.getElementById('toast-icon');
+      if (!toast || !msgEl || !iconEl) return;
+
+      msgEl.textContent = msg;
+      iconEl.textContent = icon;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+    window.onload = function () {
+      initApp();
+    };
+  </script>
+</body>
+</html>
