@@ -414,8 +414,8 @@
             </button>
             <button type="button" onclick="openAddModal('pdf')"
                     class="m3-btn-tonal px-4 py-2.5 text-sm font-semibold inline-flex items-center gap-2">
-              <span class="material-symbols-rounded text-[19px]">picture_as_pdf</span>
-              Importa da PDF / Testo
+              <span class="material-symbols-rounded text-[19px]">document_scanner</span>
+              Importa da PDF / Foto / Testo
             </button>
           </div>
         </div>
@@ -702,8 +702,8 @@
         </button>
         <button id="mode-pdf-btn" type="button" onclick="switchAddMode('pdf')"
                 class="py-2 px-3 rounded-full text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
-          <span class="material-symbols-rounded text-[18px]">picture_as_pdf</span>
-          Importa da PDF / Testo
+          <span class="material-symbols-rounded text-[18px]">document_scanner</span>
+          PDF / Foto / Testo
         </button>
       </div>
 
@@ -1108,7 +1108,8 @@
       steps: [''],
       pdfStatus: '',
       pdfSourceLabel: '',
-      rawPdfPreview: ''
+      rawPdfPreview: '',
+      importedPhotos: []
     };
     let lastAiDiagnosticError = '';
 
@@ -2483,7 +2484,8 @@
         steps: [''],
         pdfStatus: '',
         pdfSourceLabel: '',
-        rawPdfPreview: ''
+        rawPdfPreview: '',
+        importedPhotos: []
       };
       document.getElementById('add-modal-title').textContent = 'Nuova Ricetta';
       document.getElementById('add-mode-switcher').classList.remove('hidden');
@@ -2515,7 +2517,8 @@
         steps: (r.steps && r.steps.length) ? [...r.steps] : [''],
         pdfStatus: '',
         pdfSourceLabel: '',
-        rawPdfPreview: ''
+        rawPdfPreview: '',
+        importedPhotos: []
       };
       document.getElementById('add-modal-title').textContent = 'Modifica Ricetta';
       document.getElementById('add-mode-switcher').classList.add('hidden');
@@ -2552,38 +2555,79 @@
 
       if (addState.mode === 'pdf') {
         stepper.classList.add('hidden');
-        sub.textContent = 'Carica un PDF o incolla / trascina il testo della ricetta';
+        sub.textContent = 'Carica un PDF, più foto/screenshot oppure incolla il testo';
+        const photos = addState.importedPhotos || [];
         body.innerHTML = `
-          <div class="space-y-4">
-            <!-- PDF Upload Dropzone -->
+          <div class="space-y-3.5" onpaste="handlePasteEventInImport(event)">
+            <!-- Unified PDF + Multi-Image / Screenshot Dropzone -->
             <label ondragover="event.preventDefault()" ondrop="handlePdfDrop(event)"
-                   class="block p-5 rounded-3xl border-2 border-dashed text-center cursor-pointer transition-colors hover:opacity-90 space-y-2"
+                   class="block p-4 rounded-3xl border-2 border-dashed text-center cursor-pointer transition-colors hover:opacity-90 space-y-1.5"
                    style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-primary);">
-              <span class="material-symbols-rounded text-[36px]" style="color: var(--md-sys-color-primary);">upload_file</span>
-              <p class="font-extrabold text-sm">Trascina qui il file PDF oppure clicca per sceglierlo</p>
-              <p class="text-xs" style="color: var(--md-sys-color-on-surface-variant);">
-                L’assistente IA riconoscerà ingredienti, dosi, passaggi e foto prima della scelta dei Tag
+              <div class="flex items-center justify-center gap-2" style="color: var(--md-sys-color-primary);">
+                <span class="material-symbols-rounded text-[32px]">picture_as_pdf</span>
+                <span class="material-symbols-rounded text-[32px]">photo_library</span>
+              </div>
+              <p class="font-extrabold text-sm">Carica PDF oppure una o più Foto / Screenshot</p>
+              <p class="text-[11px] leading-relaxed" style="color: var(--md-sys-color-on-surface-variant);">
+                Perfetto per pagine del ricettario della nonna, screenshot da smartphone o PDF. Puoi anche incollare uno screenshot con <kbd class="px-1.5 py-0.5 rounded border text-[10px]">Ctrl+V</kbd>.
               </p>
-              <input type="file" accept="application/pdf,.pdf" onchange="handlePdfFileImport(event)" class="hidden" />
+              <input type="file" accept="application/pdf,.pdf,image/*" multiple onchange="handlePdfFileImport(event)" class="hidden" />
             </label>
 
+            <!-- Selected Multiple Screenshots / Photos Preview Queue -->
+            ${photos.length > 0 ? `
+              <div class="p-3.5 rounded-2xl border space-y-2.5"
+                   style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-primary);">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-extrabold flex items-center gap-1.5" style="color: var(--md-sys-color-primary);">
+                    <span class="material-symbols-rounded text-[17px]">collections</span>
+                    ${photos.length} ${photos.length === 1 ? 'immagine pronta' : 'immagini pronte'} per l’analisi IA
+                  </span>
+                  <label class="text-[11px] font-bold underline cursor-pointer" style="color: var(--md-sys-color-primary);">
+                    + Aggiungi altre foto
+                    <input type="file" accept="image/*" multiple onchange="handlePdfFileImport(event)" class="hidden" />
+                  </label>
+                </div>
+                <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                  ${photos.map((p, idx) => `
+                    <div class="relative shrink-0 w-16 h-20 rounded-xl overflow-hidden border"
+                         style="border-color: var(--md-sys-color-outline-variant);">
+                      <img src="${p.dataUrl}" alt="Pagina ${idx + 1}" class="w-full h-full object-cover" />
+                      <span class="absolute bottom-0.5 left-1 px-1 rounded bg-black/65 text-white text-[9px] font-bold">${idx + 1}</span>
+                      <button type="button" onclick="removeImportedPhoto(${idx})"
+                              class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-bold">
+                        ×
+                      </button>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="flex justify-end">
+                  <button type="button" onclick="analyzeImportedPhotosWithAI()"
+                          class="m3-btn-primary px-4 py-2 text-xs font-bold inline-flex items-center gap-1.5">
+                    <span class="material-symbols-rounded text-[17px]">auto_awesome</span>
+                    Leggi ${photos.length === 1 ? 'Foto' : `${photos.length} Foto`} con IA
+                  </button>
+                </div>
+              </div>
+            ` : ''}
+
             <!-- Drag & Drop / Paste Text Area -->
-            <div class="p-4 rounded-2xl border space-y-2.5"
+            <div class="p-3.5 rounded-2xl border space-y-2"
                  style="background-color: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant);">
               <label class="text-xs font-bold flex items-center gap-1.5" style="color: var(--md-sys-color-on-surface);">
                 <span class="material-symbols-rounded text-[18px]" style="color: var(--md-sys-color-primary);">content_paste</span>
-                Oppure incolla / trascina qui il testo copiato di una ricetta:
+                Oppure incolla / trascina il testo della ricetta:
               </label>
-              <textarea id="pasted-recipe-text" rows="5"
+              <textarea id="pasted-recipe-text" rows="4"
                         ondragover="event.preventDefault()"
                         ondrop="handleTextDrop(event)"
-                        placeholder="Incolla qui il testo della ricetta (titolo, ingredienti, procedimento) oppure trascina un blocco di testo..."
-                        class="w-full p-3 rounded-2xl border text-xs leading-relaxed focus:outline-none"
+                        placeholder="Incolla qui il testo della ricetta (titolo, ingredienti, procedimento)..."
+                        class="w-full p-2.5 rounded-2xl border text-xs leading-relaxed focus:outline-none"
                         style="background-color: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);"></textarea>
               <div class="flex justify-end">
                 <button type="button" onclick="handlePastedRecipeImport()"
-                        class="m3-btn-primary px-4 py-2 text-xs font-bold inline-flex items-center gap-1.5">
-                  <span class="material-symbols-rounded text-[17px]">auto_awesome</span>
+                        class="m3-btn-tonal px-4 py-1.5 text-xs font-bold inline-flex items-center gap-1.5">
+                  <span class="material-symbols-rounded text-[16px]">auto_awesome</span>
                   Analizza Testo con IA
                 </button>
               </div>
@@ -2972,25 +3016,30 @@
     }
 
     // ========================================================================
-    // PDF & PASTED TEXT AI RECIPE RECOGNITION
+    // PDF, MULTI-PHOTO / SCREENSHOT & PASTED TEXT AI RECIPE RECOGNITION
     // ========================================================================
     function handlePdfDrop(event) {
       event.preventDefault();
-      const file = event.dataTransfer?.files?.[0];
-      if (file && file.type === 'application/pdf') {
-        processPdfFile(file);
-      } else {
-        const droppedText = event.dataTransfer?.getData('text/plain');
-        if (droppedText) {
-          const ta = document.getElementById('pasted-recipe-text');
-          if (ta) ta.value = droppedText;
-          handlePastedRecipeImport();
-        }
+      const files = Array.from(event.dataTransfer?.files || []);
+      if (files.length > 0) {
+        processSelectedImportFiles(files);
+        return;
+      }
+      const droppedText = event.dataTransfer?.getData('text/plain');
+      if (droppedText) {
+        const ta = document.getElementById('pasted-recipe-text');
+        if (ta) ta.value = droppedText;
+        handlePastedRecipeImport();
       }
     }
 
     function handleTextDrop(event) {
       event.preventDefault();
+      const files = Array.from(event.dataTransfer?.files || []);
+      if (files.length > 0) {
+        processSelectedImportFiles(files);
+        return;
+      }
       const droppedText = event.dataTransfer?.getData('text/plain');
       if (droppedText) {
         const ta = document.getElementById('pasted-recipe-text');
@@ -2998,10 +3047,114 @@
       }
     }
 
+    function handlePasteEventInImport(event) {
+      const items = Array.from(event.clipboardData?.items || []);
+      const imageFiles = items
+        .filter(item => item.type && item.type.startsWith('image/'))
+        .map(item => item.getAsFile())
+        .filter(Boolean);
+      if (imageFiles.length > 0) {
+        event.preventDefault();
+        addImagesToImportQueue(imageFiles);
+        showToast(`${imageFiles.length === 1 ? 'Screenshot incollato' : `${imageFiles.length} screenshot incollati`}!`, 'add_photo_alternate');
+      }
+    }
+
     function handlePdfFileImport(event) {
-      const file = event.target.files?.[0];
-      if (file) processPdfFile(file);
+      const files = Array.from(event.target.files || []);
+      if (files.length > 0) {
+        processSelectedImportFiles(files);
+      }
       event.target.value = '';
+    }
+
+    async function processSelectedImportFiles(files) {
+      const pdfFile = files.find(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+      if (pdfFile) {
+        await processPdfFile(pdfFile);
+        return;
+      }
+      const imageFiles = files.filter(f => f.type.startsWith('image/'));
+      if (imageFiles.length > 0) {
+        await addImagesToImportQueue(imageFiles);
+      } else {
+        showToast('Seleziona un file PDF oppure una o più immagini', 'info');
+      }
+    }
+
+    function compressImageFileForVision(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxSide = 1600;
+            const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.84);
+            resolve({
+              name: file.name || 'screenshot.jpg',
+              dataUrl,
+              base64: dataUrl.split(',')[1]
+            });
+          };
+          img.onerror = () => resolve(null);
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function addImagesToImportQueue(imageFiles) {
+      addState.pdfStatus = 'Ottimizzazione immagini in corso...';
+      renderAddModal();
+
+      const current = addState.importedPhotos || [];
+      const remainingSlots = Math.max(0, 6 - current.length);
+      const toProcess = imageFiles.slice(0, remainingSlots);
+
+      for (const file of toProcess) {
+        const processed = await compressImageFileForVision(file);
+        if (processed) current.push(processed);
+      }
+
+      addState.importedPhotos = current;
+      addState.pdfStatus = '';
+      renderAddModal();
+    }
+
+    function removeImportedPhoto(idx) {
+      if (!Array.isArray(addState.importedPhotos)) return;
+      addState.importedPhotos.splice(idx, 1);
+      renderAddModal();
+    }
+
+    async function analyzeImportedPhotosWithAI() {
+      const photos = addState.importedPhotos || [];
+      if (photos.length === 0) {
+        showToast('Carica prima almeno una foto o screenshot', 'info');
+        return;
+      }
+
+      addState.pdfStatus = `Lettura ottica e ricostruzione culinaria di ${photos.length} ${photos.length === 1 ? 'immagine' : 'immagini'} con IA...`;
+      renderAddModal();
+
+      const base64List = photos.map(p => p.base64);
+      const coverPreview = photos[0]?.dataUrl || '';
+      const fallbackName = (photos[0]?.name || '').replace(/\.[^.]+$/, '');
+
+      await runRecipeExtractionPipeline(
+        'Leggi attentamente tutte le immagini/screenshot allegati (in ordine sequenziale) e ricostruisci la ricetta completa.',
+        base64List,
+        coverPreview,
+        fallbackName,
+        true
+      );
     }
 
     async function handlePastedRecipeImport() {
@@ -3104,13 +3257,15 @@
       const cleaned = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
       const firstBrace = cleaned.indexOf('{');
       const lastBrace = cleaned.lastIndexOf('}');
-      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) return null;
+      try {
         return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+      } catch (e) {
+        return null;
       }
-      return JSON.parse(cleaned);
     }
 
-    async function runRecipeExtractionPipeline(rawText, pageImagesBase64 = [], coverPreview = '', fallbackTitle = '') {
+    async function runRecipeExtractionPipeline(rawText, pageImagesBase64 = [], coverPreview = '', fallbackTitle = '', isPhotoBatch = false) {
       lastAiDiagnosticError = '';
       let usedEngineName = '';
       let parsed = await parseRecipeWithAI(rawText, pageImagesBase64);
@@ -3126,6 +3281,12 @@
       let usedAI = Boolean(parsed);
 
       if (!parsed) {
+        if (isPhotoBatch) {
+          addState.pdfStatus = `Impossibile leggere le foto con IA (${lastAiDiagnosticError || 'verifica le chiavi API Gemini o Groq nelle impostazioni'}).`;
+          renderAddModal();
+          showToast('Serve una chiave Gemini o Groq attiva per leggere le foto', 'error');
+          return;
+        }
         parsed = fallbackParsePdfLines(rawText.split('\n'), fallbackTitle);
       }
 
@@ -3186,11 +3347,11 @@ Regole culinarie:
 
       const parts = [
         {
-          text: `Analizza questa ricetta ed estrai il JSON strutturato:\n\n${rawText || '(Documento scansionato: leggi le immagini allegate)'}`
+          text: `Analizza questa ricetta ed estrai il JSON strutturato:\n\n${rawText || '(Documento/Foto: leggi le immagini allegate)'}`
         }
       ];
 
-      (pageImagesBase64 || []).slice(0, 2).forEach(b64 => {
+      (pageImagesBase64 || []).slice(0, 6).forEach(b64 => {
         if (b64) {
           parts.push({
             inlineData: {
@@ -3262,10 +3423,13 @@ Regole culinarie:
 
       for (const model of models.slice(0, 6)) {
         const isVisionModel = /llama-4|vision/i.test(model);
+        if (hasImages && !isVisionModel && /^Leggi attentamente tutte le immagini/i.test(rawText)) {
+          continue;
+        }
         const userContent = (isVisionModel && hasImages)
           ? [
-              { type: 'text', text: `Analizza questa ricetta ed estrai il JSON strutturato:\n\n${rawText || '(Documento scansionato: leggi le immagini allegate)'}` },
-              ...pageImagesBase64.slice(0, 2).map(b64 => ({
+              { type: 'text', text: `Analizza questa ricetta ed estrai il JSON strutturato:\n\n${rawText || '(Documento/Foto: leggi le immagini allegate)'}` },
+              ...pageImagesBase64.slice(0, 5).map(b64 => ({
                 type: 'image_url',
                 image_url: { url: `data:image/jpeg;base64,${b64}` }
               }))
