@@ -1503,6 +1503,41 @@
     // ========================================================================
     // MATERIAL YOU THEMES & CUSTOM JSON SKIN ENGINE
     // ========================================================================
+    function syncSystemWindowColor() {
+      try {
+        const computed = getComputedStyle(document.documentElement);
+        const surfaceColor = computed.getPropertyValue('--md-sys-color-surface').trim()
+          || computed.getPropertyValue('--md-sys-color-background').trim()
+          || '#FFF8F6';
+        const primaryColor = computed.getPropertyValue('--md-sys-color-primary').trim() || '#9C4234';
+
+        let metaTheme = document.querySelector('meta[name="theme-color"]');
+        if (!metaTheme) {
+          metaTheme = document.createElement('meta');
+          metaTheme.name = 'theme-color';
+          document.head.appendChild(metaTheme);
+        }
+        metaTheme.setAttribute('content', surfaceColor);
+
+        const isDark = document.documentElement.getAttribute('data-theme') === 'mirtillo' || isColorDark(surfaceColor);
+        const appleStatusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+        if (appleStatusMeta) {
+          appleStatusMeta.setAttribute('content', isDark ? 'black-translucent' : 'default');
+        }
+
+        if (typeof initPwaSupport === 'function') {
+          initPwaSupport(surfaceColor, primaryColor);
+        }
+      } catch (e) {}
+    }
+
+    function isColorDark(hex) {
+      const rgb = hexToRgb(hex);
+      if (!rgb) return false;
+      const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+      return luminance < 0.45;
+    }
+
     function initThemeAndSkin() {
       const savedTheme = localStorage.getItem(THEME_KEY) || 'terracotta';
       document.documentElement.setAttribute('data-theme', savedTheme);
@@ -1513,8 +1548,10 @@
         if (savedSkinRaw) {
           const skin = JSON.parse(savedSkinRaw);
           applySkinObject(skin, false);
+          return;
         }
       } catch (e) {}
+      syncSystemWindowColor();
     }
 
     function setTheme(themeName) {
@@ -1522,6 +1559,7 @@
       document.documentElement.setAttribute('data-theme', themeName);
       localStorage.setItem(THEME_KEY, themeName);
       updateThemeCheckmarks(themeName);
+      syncSystemWindowColor();
       toggleThemePopover();
     }
 
@@ -1620,6 +1658,7 @@
       const menuLabel = document.getElementById('custom-skin-menu-label');
       if (menuLabel) menuLabel.textContent = `Skin: ${skin.name || 'Attiva'}`;
       updateThemeCheckmarks('');
+      syncSystemWindowColor();
     }
 
     function removeCustomSkin(notify = true) {
@@ -1640,6 +1679,7 @@
       const banner = document.getElementById('active-skin-banner');
       if (banner) banner.classList.add('hidden');
       updateThemeCheckmarks(localStorage.getItem(THEME_KEY) || 'terracotta');
+      syncSystemWindowColor();
       if (notify) showToast('Tema standard ripristinato', 'palette');
     }
 
@@ -3468,19 +3508,18 @@ Regole culinarie:
     }
 
     window.onload = function () {
-      initPwaSupport();
       initApp();
     };
 
     // ========================================================================
     // PROGRESSIVE WEB APP (PWA) MANIFEST & SERVICE WORKER FOR CHROME / SAFARI
     // ========================================================================
-    function initPwaSupport() {
+    function initPwaSupport(bgHex = '#FFF8F6', primaryHex = '#9C4234') {
       try {
         const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-          <rect width="512" height="512" rx="112" fill="#9C4234"/>
+          <rect width="512" height="512" rx="112" fill="${primaryHex}"/>
           <circle cx="236" cy="268" r="118" fill="#FFDAD4"/>
-          <circle cx="236" cy="268" r="84" fill="#9C4234"/>
+          <circle cx="236" cy="268" r="84" fill="${primaryHex}"/>
           <rect x="342" y="250" width="106" height="36" rx="18" fill="#FFDAD4"/>
           <path d="M196 132c0-18 16-24 16-42M236 124c0-18 16-24 16-42M276 132c0-18 16-24 16-42"
                 stroke="#FFDAD4" stroke-width="18" stroke-linecap="round" fill="none"/>
@@ -3513,8 +3552,8 @@ Regole culinarie:
             scope: scopeUrl,
             display: 'standalone',
             orientation: 'portrait-primary',
-            background_color: '#FFF8F6',
-            theme_color: '#9C4234',
+            background_color: bgHex,
+            theme_color: bgHex,
             icons: [
               { src: pngIconUrl, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
               { src: pngIconUrl, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
