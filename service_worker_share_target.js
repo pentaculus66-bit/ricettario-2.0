@@ -60,5 +60,9 @@ self.addEventListener('fetch', (event) => {
         return Response.redirect(redirectUrl, 303);
       })()
     );
+    return;
   }
+
+  // Pass-through fetch handler so Chrome recognizes the Service Worker as offline-capable
+  event.respondWith(fetch(event.request));
 });
