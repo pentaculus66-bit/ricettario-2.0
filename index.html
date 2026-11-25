@@ -3,6 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#9C4234" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Ricettario 2.0" />
+  <link id="pwa-manifest-link" rel="manifest" />
+  <link id="pwa-apple-icon" rel="apple-touch-icon" />
+  <link id="pwa-favicon" rel="icon" type="image/svg+xml" />
   <title>Ricettario 2.0 — L'Archivio di Famiglia</title>
 
   <!-- Tailwind CSS -->
@@ -3504,8 +3512,79 @@ Regole culinarie:
     }
 
     window.onload = function () {
+      initPwaSupport();
       initApp();
     };
+
+    // ========================================================================
+    // PROGRESSIVE WEB APP (PWA) MANIFEST & SERVICE WORKER FOR CHROME / SAFARI
+    // ========================================================================
+    function initPwaSupport() {
+      try {
+        const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <rect width="512" height="512" rx="112" fill="#9C4234"/>
+          <circle cx="236" cy="268" r="118" fill="#FFDAD4"/>
+          <circle cx="236" cy="268" r="84" fill="#9C4234"/>
+          <rect x="342" y="250" width="106" height="36" rx="18" fill="#FFDAD4"/>
+          <path d="M196 132c0-18 16-24 16-42M236 124c0-18 16-24 16-42M276 132c0-18 16-24 16-42"
+                stroke="#FFDAD4" stroke-width="18" stroke-linecap="round" fill="none"/>
+        </svg>`;
+        const iconDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg);
+
+        const faviconEl = document.getElementById('pwa-favicon');
+        if (faviconEl) faviconEl.href = iconDataUrl;
+
+        // Render PNG icon via canvas for maximum Android Chrome & iOS Safari compatibility
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, 512, 512);
+          const pngIconUrl = canvas.toDataURL('image/png');
+
+          const appleIcon = document.getElementById('pwa-apple-icon');
+          if (appleIcon) appleIcon.href = pngIconUrl;
+
+          const startUrl = window.location.href.split('#')[0];
+          const scopeUrl = startUrl.substring(0, startUrl.lastIndexOf('/') + 1);
+          const manifestObj = {
+            name: 'Ricettario 2.0 — Archivio di Famiglia',
+            short_name: 'Ricettario 2.0',
+            description: 'Il ricettario di famiglia con wizard, importazione PDF con IA e backup.',
+            start_url: startUrl,
+            scope: scopeUrl,
+            display: 'standalone',
+            orientation: 'portrait-primary',
+            background_color: '#FFF8F6',
+            theme_color: '#9C4234',
+            icons: [
+              { src: pngIconUrl, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+              { src: pngIconUrl, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+            ]
+          };
+
+          const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+          const manifestUrl = URL.createObjectURL(manifestBlob);
+          const manifestLink = document.getElementById('pwa-manifest-link');
+          if (manifestLink) manifestLink.href = manifestUrl;
+        };
+        img.src = iconDataUrl;
+
+        // Lightweight Blob Service Worker (works on HTTPS like GitHub Pages)
+        if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+          const swCode = `
+            self.addEventListener('install', (e) => self.skipWaiting());
+            self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+            self.addEventListener('fetch', () => {});
+          `;
+          const swBlob = new Blob([swCode], { type: 'application/javascript' });
+          const swUrl = URL.createObjectURL(swBlob);
+          navigator.serviceWorker.register(swUrl).catch(() => {});
+        }
+      } catch (e) {}
+    }
   </script>
 </body>
 </html>
