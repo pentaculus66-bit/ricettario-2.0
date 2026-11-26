@@ -2,8 +2,8 @@
 <html lang="it" data-theme="terracotta">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-  <meta name="theme-color" content="#9C4234" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta id="meta-theme-color" name="theme-color" content="#FFF8F6" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -180,13 +180,28 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    html {
+      font-size: clamp(13px, 3.6vw, 15.5px);
+      background-color: var(--md-sys-color-background);
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    @media (min-width: 640px) {
+      html {
+        font-size: 16px;
+      }
+    }
+
     body {
       font-family: var(--app-font-family);
       background-color: var(--md-sys-color-background);
       background-image: var(--app-bg-pattern);
       color: var(--md-sys-color-on-background);
       transition: background-color 0.28s ease, color 0.28s ease;
+      max-width: 100vw;
       overflow-x: hidden;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     h1, h2, h3, .skin-heading {
@@ -1513,13 +1528,23 @@
           || '#FFF8F6';
         const primaryColor = computed.getPropertyValue('--md-sys-color-primary').trim() || '#9C4234';
 
-        let metaTheme = document.querySelector('meta[name="theme-color"]');
-        if (!metaTheme) {
-          metaTheme = document.createElement('meta');
-          metaTheme.name = 'theme-color';
-          document.head.appendChild(metaTheme);
+        // Sync html & body background so Android Chrome colors BOTH top status bar and bottom navigation bar
+        document.documentElement.style.backgroundColor = surfaceColor;
+        if (document.body) {
+          document.body.style.backgroundColor = surfaceColor;
         }
-        metaTheme.setAttribute('content', surfaceColor);
+
+        // Replace meta theme-color node so Chrome Android forces an immediate bar repaint on theme switch
+        const oldMeta = document.querySelector('meta[name="theme-color"]');
+        const newMeta = document.createElement('meta');
+        newMeta.id = 'meta-theme-color';
+        newMeta.name = 'theme-color';
+        newMeta.setAttribute('content', surfaceColor);
+        if (oldMeta && oldMeta.parentNode) {
+          oldMeta.parentNode.replaceChild(newMeta, oldMeta);
+        } else {
+          document.head.appendChild(newMeta);
+        }
 
         const isDark = document.documentElement.getAttribute('data-theme') === 'mirtillo' || isColorDark(surfaceColor);
         const appleStatusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
