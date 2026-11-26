@@ -185,6 +185,7 @@
       background-color: var(--md-sys-color-background);
       max-width: 100vw;
       overflow-x: hidden;
+      min-height: 100%;
     }
 
     @media (min-width: 640px) {
@@ -201,6 +202,7 @@
       transition: background-color 0.28s ease, color 0.28s ease;
       max-width: 100vw;
       overflow-x: hidden;
+      min-height: 100dvh;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
@@ -975,6 +977,11 @@
     <span id="toast-icon" class="material-symbols-rounded text-[18px]">check_circle</span>
     <span id="toast-msg">Operazione completata</span>
   </div>
+
+  <!-- BOTTOM SAFE-AREA BAR MATCHING CURRENT THEME -->
+  <div aria-hidden="true"
+       class="fixed bottom-0 left-0 right-0 z-40 pointer-events-none transition-colors duration-300"
+       style="height: env(safe-area-inset-bottom, 0px); background-color: var(--md-sys-color-surface);"></div>
 
   <script>
     // Configure PDF.js worker
